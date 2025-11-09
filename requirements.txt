@@ -1,0 +1,6 @@
+Flask
+flask-cors
+web3
+pyjwt
+cachelib
+python-dotenv

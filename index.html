@@ -1,0 +1,310 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AuthChain Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Basic Styling -->
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      background-color: #f4f7f6;
+      color: #333;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+      transition: background-color 0.2s ease;
+    }
+    button:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #2980b9;
+    }
+    #log {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      border: 1px solid #bdc3c7;
+      border-radius: 5px;
+      padding: 15px;
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      min-height: 150px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    div.buttons {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>AuthChain — Demo (MetaMask)</h1>
+
+  <div class="buttons">
+    <button id="connectBtn">Connect MetaMask</button>
+    <button id="registerBtn" disabled>Register On-Chain</button>
+    <button id="loginBtn" disabled>Login (Sign Challenge)</button>
+  </div>
+
+  <pre id="log">Awaiting connection...</pre>
+
+<script>
+    const logEl = document.getElementById('log');
+    const log = (t) => {
+        console.log(t);
+        // Prepend new logs
+        logEl.textContent = `[${new Date().toLocaleTimeString()}] ${t}\n` + logEl.textContent;
+    }
+    
+    let account = null;
+    
+    // --- CONFIGURATION REQUIRED ---
+    // 1. Set your deployed contract address
+    // (This must match the CONTRACT_ADDRESS in your app.py)
+    const CONTRACT_ADDRESS = "0xE571b5b1eeB4a56EB830d225260AE13757a5C285";
+    
+    // 2. Add your contract's ABI (Application Binary Interface) here.
+    // (This must match the 'abi' content in your AuthChain.json file)
+    const CONTRACT_ABI = [
+      {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "users",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "publicKey",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "isActive",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_publicKey",
+          "type": "string"
+        }
+      ],
+      "name": "registerUser",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "revokeUser",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getPublicKey",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "isUserActive",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    }
+  
+    ];
+    
+    
+    // URL for your Python backend
+    const BACKEND_BASE = "http://localhost:5000"; 
+    
+    function checkConfig() {
+      let valid = true;
+      if (CONTRACT_ABI.length === 0) {
+        log("Error: CONTRACT_ABI is empty in index.html. Please add your contract's ABI.");
+        valid = false;
+      }
+      if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === "0x...") {
+        log("Error: CONTRACT_ADDRESS is not set in index.html. Please add your deployed contract's address.");
+        valid = false;
+      }
+      return valid;
+    }
+
+    async function connect() {
+      if (!window.ethereum) {
+        log("Error: MetaMask is not installed. Please install it to use this app.");
+        return;
+      }
+      
+      if (!checkConfig()) return;
+      
+      try {
+        const accounts = await ethereum.request({method: 'eth_requestAccounts'});
+        account = accounts[0];
+        log("Connected: "+ account);
+        document.getElementById('registerBtn').disabled = false;
+        document.getElementById('loginBtn').disabled = false;
+      } catch (e) {
+        log("Connection failed: " + e.message);
+      }
+    }
+    
+    async function registerOnChain() {
+      if (!account) { log("Please connect your wallet first."); return; }
+      if (!checkConfig()) return;
+      
+      const web3 = new Web3(window.ethereum);
+      const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+      const pubKeyPlaceholder = "user-metadata-or-publicKey"; 
+      
+      log("Sending registration transaction... (Please approve in MetaMask)");
+      try {
+        const tx = await contract.methods.registerUser(pubKeyPlaceholder)
+          .send({from: account});
+        log("Registration tx mined: " + tx.transactionHash);
+      } catch (e) {
+        log("Registration failed: " + e.message);
+      }
+    }
+    
+    async function login() {
+      if (!account) { log("Please connect your wallet first."); return; }
+      if (!checkConfig()) return;
+      
+      log("Requesting challenge from backend...");
+      let res, challengeJson;
+      try {
+        res = await fetch(BACKEND_BASE + "/challenge", {
+          method: "POST",
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({address: account})
+        });
+        challengeJson = await res.json();
+      } catch (e) {
+        log("Fetch error: Could not reach backend. Is it running? " + e.message);
+        return;
+      }
+
+      if (!res.ok) {
+        log("Challenge error: " + (challengeJson.error || JSON.stringify(challengeJson)));
+        return;
+      }
+      
+      const nonce = challengeJson.nonce;
+      log("Received nonce: " + nonce);
+    
+      // Use MetaMask to sign the message
+      log("Please sign the message in MetaMask...");
+      let signature;
+      try {
+        signature = await ethereum.request({
+          method: 'personal_sign',
+          params: [nonce, account]
+        });
+      } catch (e) {
+        log("Signature failed: " + e.message);
+        return;
+      }
+      
+      log("Signature: " + signature.substring(0, 40) + "...");
+    
+      // Send signature to backend for verification
+      log("Verifying signature with backend...");
+      let verifyRes, verifyJson;
+      try {
+        verifyRes = await fetch(BACKEND_BASE + "/verify", {
+          method: "POST",
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({address: account, signature})
+        });
+        verifyJson = await verifyRes.json();
+      } catch (e) {
+        log("Fetch error: Could not reach backend. " + e.message);
+        return;
+      }
+      
+      if (!verifyRes.ok) {
+        log("Verify failed: " + (verifyJson.error || JSON.stringify(verifyJson)));
+        return;
+      }
+      
+      log("✅ Auth success! Token: " + verifyJson.token.substring(0, 40) + "...");
+    }
+    
+    document.getElementById('connectBtn').onclick = connect;
+    document.getElementById('registerBtn').onclick = registerOnChain;
+    document.getElementById('loginBtn').onclick = login;
+    
+    // Clear log on start
+    logEl.textContent = "Awaiting connection...\n";
+</script>
+
+<!-- Add web3.js from CDN -->
+<script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.10.0/dist/web3.min.js"></script>
+</body>
+</html>
