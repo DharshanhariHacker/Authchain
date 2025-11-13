@@ -2,309 +2,712 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AuthChain Demo</title>
+  <title>AuthChain — Secure Protocol Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Basic Styling -->
   <style>
+    /* HOLOGRAPHIC BLUE COLOR PALETTE (Intensified Blues) */
+    :root{
+      --bg1:#000810; /* Deepest Navy Black */
+      --bg2:#000408; /* Darkest Black (Main background) */
+      --card:#0a1220; /* Dark card background */
+      --accent: #0088ff; /* Brighter Electric Blue */
+      --accent-2: #33ffff; /* Vibrant Light Cyan */
+      --text: #e8faff; /* Near White */
+      --glass: rgba(0, 136, 255, 0.1); 
+      --glass-2: rgba(51, 255, 255, 0.08); 
+      --muted: #a0a8bb; 
+      --log-success: #39ff14; 
+      --log-error: #ff3366; 
+      --log-info: #33ffff; /* Cyan Info */
+      --flash-color: rgba(51, 255, 255, 0.8); /* Vibrant Cyan Flash */
+    }
+    
+    /* Static Background Image (Circuit Board) */
+    #static-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -2; /* Ensure it's behind everything */
+        background-image: url('https://i.imgur.com/eBf23tA.jpeg'); /* A subtle circuit board image */
+        background-size: cover;
+        background-position: center;
+        filter: brightness(0.4) contrast(1.2); /* Darken and enhance for a techy feel */
+        opacity: 0.8;
+        will-change: filter; 
+    }
+
+    /* Background Overlay (Static Gradient) */
+    #three-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        overflow: hidden; 
+        /* Static gradient overlay */
+        background: radial-gradient(circle at 50% 100%, rgba(0, 136, 255, 0.15) 0%, transparent 70%), var(--bg2);
+    }
+    
+    /* Full-screen flash overlay for click effect */
+    #flash-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: var(--flash-color);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 1000;
+        transition: opacity 0.05s linear; /* Very fast flash in */
+    }
+    #flash-overlay.active {
+        opacity: 0.8;
+        transition: opacity 0.2s ease-out 0.05s; /* Slower fade out */
+    }
+
+
+    /* Base Layout */
+    html,body{height:100%;margin:0;overflow:hidden;} 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.6;
-      background-color: #f4f7f6;
-      color: #333;
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      font-family: 'Share Tech Mono', monospace, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: var(--text);
+      display:flex;align-items:center;justify-content:center;padding:32px;
+      /* Holographic text glow */
+      text-shadow: 0 0 4px var(--accent-2), 0 0 1px var(--accent-2); 
     }
-    h1 {
-      color: #2c3e50;
-      text-align: center;
+    .scene {
+      width:100%;max-width:960px;border-radius:12px;padding:24px;box-sizing:border-box;
+      background: var(--card);
+      border: 1px solid rgba(51, 255, 255, 0.15); 
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 20px rgba(0, 136, 255, 0.5); 
+      backdrop-filter: blur(10px); 
+      position:relative;z-index: 10;
+      overflow: hidden; 
+      will-change: transform; 
+      transition: box-shadow 0.1s ease-out; 
     }
-    button {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      margin: 5px;
-      transition: background-color 0.2s ease;
+    .scene::before { content: none; }
+
+    /* Background Orbs (Kept for subtle light) */
+    .orb{position:absolute;border-radius:50%;filter:blur(40px);opacity:0.25;mix-blend-mode:screen}
+    .orb.one{width:300px;height:300px;left:-15%;top:-10%;background:linear-gradient(90deg,var(--accent),#00aaff);animation:float1 16s ease-in-out infinite}
+    .orb.two{width:220px;height:220px;right:-10%;bottom:-18%;background:linear-gradient(90deg,var(--accent-2),#00ffff);animation:float2 20s ease-in-out infinite}
+    @keyframes float1{0%{transform:translateY(0) scale(1)}50%{transform:translateY(15px) scale(1.03)}100%{transform:translateY(0) scale(1)}}
+    @keyframes float2{0%{transform:translateY(0) scale(1)}50%{transform:translateY(-18px) scale(0.97)}100%{transform:translateY(0) scale(1)}}
+
+    /* Header & Logo */
+    header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+    .logo{
+      width:60px;height:60px;border-radius:8px;display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      box-shadow:0 0 15px rgba(0, 136, 255, 0.5), 0 0 8px rgba(51, 255, 255, 0.4); 
+      transform:rotate(-5deg);
+      animation:logoPulse 1.5s infinite ease-in-out alternate, logoSpin 10s linear infinite; /* Combined animation */
     }
-    button:disabled {
-      background-color: #bdc3c7;
+    @keyframes logoPulse{
+        0% { transform: scale(1) rotate(-5deg); }
+        100% { transform: scale(1.03) rotate(-5deg); }
+    }
+    @keyframes logoSpin{
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Logo SVG internal spark animation */
+    #logo-spark {
+        animation: sparkFlicker 0.5s steps(2, end) infinite;
+    }
+    @keyframes sparkFlicker {
+        0% { opacity: 0.8; }
+        100% { opacity: 0.3; }
+    }
+
+    h1{font-size:22px;margin:0;color:var(--text);}
+    p.subtitle{margin:0;color:var(--muted);font-size:12px;opacity:0.8;text-shadow:none;}
+
+    /* Controls & Buttons */
+    .controls{display:flex;gap:8px;align-items:center;margin:16px 0}
+    .btn{
+      appearance:none;border:0;padding:10px 16px;border-radius:8px;font-weight:600;letter-spacing:.5px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease, background .2s ease;
+      background:linear-gradient(90deg, #1f113a, #0e0719); 
+      color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,0.6);
+      display: inline-flex; align-items: center; justify-content: center;
+      text-transform: uppercase;
+      font-size: 13px;
+      text-shadow: 0 0 1px var(--accent-2);
+    }
+    .btn:hover:not(:disabled) {
+        box-shadow: 0 0 12px var(--accent-2), 0 4px 12px rgba(0,0,0,0.8);
+        transform: translateY(-1px);
+    }
+    .btn:active{transform:translateY(0)}
+
+    /* Primary button - Intense Blue Shades */
+    .btn.primary, .btn:not(.ghost):not(.primary){ 
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+      color:var(--bg1); 
+      text-shadow: none; 
+    }
+    .btn.ghost{background:transparent;border:1px solid rgba(51, 255, 255, 0.2);color:var(--text);}
+    
+    /* Disabled and Loading States */
+    .btn:disabled{
+      opacity:.4;
+      filter:grayscale(.5);
       cursor: not-allowed;
     }
-    button:hover:not(:disabled) {
-      background-color: #2980b9;
+    .btn.loading {
+      background: #2a1a44 !important; 
     }
-    #log {
-      background-color: #2c3e50;
-      color: #ecf0f1;
-      border: 1px solid #bdc3c7;
-      border-radius: 5px;
-      padding: 15px;
-      font-family: 'Courier New', Courier, monospace;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      min-height: 150px;
-      max-height: 400px;
-      overflow-y: auto;
-      margin-top: 20px;
+    .btn.primary.loading {
+      background: #2a1a44 !important;
+      color: var(--text) !important;
     }
-    div.buttons {
-      text-align: center;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 20px;
+
+
+    /* Ripple effect (cleaner) */
+    .btn::after{content:'';position:absolute;border-radius:50%;transform:scale(0);opacity:0;pointer-events:none;background:rgba(51, 255, 255, 0.4);}
+    .btn.ripple:active::after{animation:rippleClean .6s ease-out;opacity:.3}
+    @keyframes rippleClean{
+        0%{transform:scale(0);opacity:0.3;}
+        100%{transform:scale(3);opacity:0;}
     }
+
+    /* Action Card & Log */
+    .main{display:grid;grid-template-columns:1fr 400px;gap:18px;align-items:start}
+    .card{
+      background:var(--card);padding:18px;border-radius:10px;
+      border:1px solid rgba(51, 255, 255, 0.1); 
+      box-shadow:0 0 8px rgba(0,0,0,0.5);
+    } 
+
+    .log{
+        background: #090e1a; 
+        border-radius:8px;padding:10px;
+        font-family: 'Fragment Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New';
+        color:var(--text);min-height:200px;max-height:340px;overflow-y:auto;
+        border:1px solid rgba(0, 136, 255, 0.15); 
+        position:relative;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    .log::-webkit-scrollbar { width: 6px; }
+    .log::-webkit-scrollbar-track { background: var(--card); }
+    .log::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+    .log::-webkit-scrollbar-thumb:hover { background: var(--accent-2); }
+
+    .log .line{opacity:0;display:block;white-space:pre-wrap;margin-bottom:4px;}
+    .line.show{animation:slideIn .35s ease forwards}
+    @keyframes slideIn{
+        from{transform:translateY(5px);opacity:0;}
+        to{transform:translateY(0);opacity:1;}
+    }
+    
+    /* Holographic Log coloring */
+    .line.info{color:var(--log-info); text-shadow: 0 0 1px var(--log-info);}
+    .line.success{color:var(--log-success); text-shadow: 0 0 1px var(--log-success);}
+    .line.error{color:var(--log-error); text-shadow: 0 0 1px var(--log-error);}
+    .line .log-label{font-weight:700;margin-right:4px;}
+
+    .meta{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap: wrap;}
+    .chip{
+      background:var(--glass);padding:5px 9px;border-radius:999px;font-size:12px;
+      color:var(--muted);
+      border:1% solid rgba(0, 136, 255, 0.1);
+      transition: all 0.2s ease;
+      text-shadow: none;
+    }
+    .chip:hover{background:var(--glass-2); cursor: default; color: var(--text);}
+
+    .status{display:inline-flex;gap:6px;align-items:center}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--log-info);box-shadow:0 0 6px var(--log-info); transition: all 0.4s cubic-bezier(.2,.9,.3,1);}
+
+    /* Holographic Connection Status */
+    .status-connected .dot{
+        background:var(--log-success);
+        box-shadow:0 0 10px var(--log-success);
+        animation: statusPulse 1.2s infinite alternate;
+    }
+    @keyframes statusPulse{
+        0% {transform:scale(1); opacity: 1;}
+        100% {transform:scale(1.15); opacity: 0.8;}
+    }
+
+    footer{display:flex;align-items:center;justify-content:space-between;margin-top:16px;color:var(--muted);font-size:12px;opacity:0.7;}
+
+    /* small responsive */
+    @media (max-width:880px){
+      .main{grid-template-columns:1fr;}
+      .log{order:2;max-height: 250px;}
+    }
+
+    /* animated chain icon (Server Status Indicator) */
+    .chain{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border:1px solid rgba(0, 136, 255, 0.1);}
+    .pulse{width:30px;height:30px;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent-2));animation:pulseClean 1.8s infinite ease-in-out alternate}
+    @keyframes pulseClean{
+        0%{transform:scale(.95);opacity:.8;}
+        100%{transform:scale(1.05);opacity:1;}
+    }
+
+    /* tiny loaders */
+    .loader{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--log-info);animation:spin .8s linear infinite; display: none;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* New Cursor Trail Effect */
+    .trail-dot {
+        position: fixed;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--accent-2); /* Cyan */
+        opacity: 0;
+        pointer-events: none;
+        z-index: 999;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 6px var(--accent-2);
+        transition: opacity 0.5s ease-out, transform 0.8s ease-out;
+        will-change: transform, opacity;
+    }
+    
   </style>
 </head>
 <body>
-  <h1>AuthChain — Demo (MetaMask)</h1>
+  
+  <!-- Static Background Image (Base Layer) --><div id="static-bg"></div>
+  
+  <!-- Background Overlay (Static Gradient) --><div id="three-bg"></div>
+  
+  <!-- CLICK FLASH OVERLAY --><div id="flash-overlay"></div>
 
-  <div class="buttons">
-    <button id="connectBtn">Connect MetaMask</button>
-    <button id="registerBtn" disabled>Register On-Chain</button>
-    <button id="loginBtn" disabled>Login (Sign Challenge)</button>
+  <div class="scene">
+    <!-- Keeping CSS orbs for light effect --><div class="orb one" aria-hidden></div>
+    <div class="orb two" aria-hidden></div>
+
+    <header>
+      <div class="logo" aria-hidden>
+        <!-- NEW LOGO: Holographic Circuit Core --><svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer Ring --><circle cx="12" cy="12" r="10" stroke="#e0f7fa" stroke-width="1.5" opacity="0.4"/>
+            <!-- Internal Electric Cross (Animated Spark) --><g id="logo-spark">
+                <path d="M12 4v16 M4 12h16 M17 7 L7 17 M7 7 L17 17" stroke="#33ffff" stroke-width="1.2" stroke-linecap="round" opacity="0.9"/>
+            </g>
+            <!-- Core Highlight --><circle cx="12" cy="12" r="2" fill="#0077ff" stroke="#33ffff" stroke-width="0.8"/>
+        </svg>
+      </div>
+      <div>
+        <h1>AuthChain — Secure Protocol</h1>
+        <p class="subtitle">Decentralized Access: Secure Authentication Protocol</p>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <div class="chain" title="System Status Indicator">
+          <!-- Server rack icon --><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-2); opacity: 0.7;">
+            <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
+            <path d="M8 6h8"></path><path d="M8 10h8"></path><path d="M8 14h8"></path><path d="M8 18h8"></path>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <div class="main">
+      <div class="card">
+        <div class="meta">
+          <div class="chip">CONTRACT: <strong style="margin-left:6px">0xE571...C285</strong></div>
+          <div class="chip">BACKEND: <strong style="margin-left:6px">localhost:5000</strong></div>
+          <div style="flex:1"></div>
+          <div class="status" id="statusContainer"><div class="dot" id="statusDot"></div><div style="font-size:12px;color:var(--muted);margin-left:4px" id="statusText">OFFLINE</div></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button id="connectBtn" class="btn primary ripple">
+                <span class="btn-text">CONNECT WALLET</span>
+                <span class="btn-loader loader"></span>
+            </button>
+            <button id="registerBtn" class="btn ghost ripple" disabled>
+                <span class="btn-text">REGISTER IDENTITY</span>
+                <span class="btn-loader loader"></span>
+            </button>
+            <button id="loginBtn" class="btn primary ripple" disabled>
+                <span class="btn-text">ACCESS PROTOCOL</span>
+                <span class="btn-loader loader"></span>
+            </button>
+          </div>
+
+          <div style="display:flex;gap:6px;align-items:center">
+            <div style="flex:1">
+              <label style="font-size:12px;color:var(--muted)">ACTIVE ACCOUNT</label>
+              <div id="accountEl" style="font-family:monospace;margin-top:4px;color:#9fb5d9">— UNKNOWN —</div>
+            </div>
+            <div style="width:100px;text-align:right">
+              <label style="font-size:12px;color:var(--muted)">NETWORK</label>
+              <div id="networkEl" style="margin-top:4px;color:#9fb5d9">—</div>
+            </div>
+          </div>
+
+          <div style="margin-top:6px;color:var(--muted);font-size:12px;opacity:0.9">MONITORING SECURE DATALINKS FOR PROTOCOL STATUS.</div>
+        </div>
+
+      </div>
+
+      <div class="card log" id="log" aria-live="polite">
+        <!-- dynamic logs will appear here --><div class="line info show">[—] <strong class="log-label">SYSTEM:</strong> PROTOCOL INITIATED. STANDBY...</div>
+      </div>
+    </div>
+
+    <footer>
+      <div>© AuthChain SYSTEMS</div>
+    </footer>
+
   </div>
 
-  <pre id="log">Awaiting connection...</pre>
-
 <script>
-    const logEl = document.getElementById('log');
-    const log = (t) => {
-        console.log(t);
-        // Prepend new logs
-        logEl.textContent = `[${new Date().toLocaleTimeString()}] ${t}\n` + logEl.textContent;
-    }
-    
-    let account = null;
-    
-    // --- CONFIGURATION REQUIRED ---
-    // 1. Set your deployed contract address
-    // (This must match the CONTRACT_ADDRESS in your app.py)
-    const CONTRACT_ADDRESS = "0xE571b5b1eeB4a56EB830d225260AE13757a5C285";
-    
-    // 2. Add your contract's ABI (Application Binary Interface) here.
-    // (This must match the 'abi' content in your AuthChain.json file)
-    const CONTRACT_ABI = [
-      {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "users",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "publicKey",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "isActive",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "_publicKey",
-          "type": "string"
-        }
-      ],
-      "name": "registerUser",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "revokeUser",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
-        }
-      ],
-      "name": "getPublicKey",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
-        }
-      ],
-      "name": "isUserActive",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    }
-  
-    ];
-    
-    
-    // URL for your Python backend
-    const BACKEND_BASE = "http://localhost:5000"; 
-    
-    function checkConfig() {
-      let valid = true;
-      if (CONTRACT_ABI.length === 0) {
-        log("Error: CONTRACT_ABI is empty in index.html. Please add your contract's ABI.");
-        valid = false;
-      }
-      if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === "0x...") {
-        log("Error: CONTRACT_ADDRESS is not set in index.html. Please add your deployed contract's address.");
-        valid = false;
-      }
-      return valid;
-    }
+  // ---------- AUTHCHAIN INTERACTION LOGIC ----------
+  const CONTRACT_ADDRESS = "0xE571b5b1eeB4a56EB830d225260AE13757a5C285";
+  const CONTRACT_ABI = [
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"users","outputs":[{"internalType":"string","name":"publicKey","type":"string"},{"internalType":"bool","name":"isActive","type":"bool"}],"stateMutability":"view","type":"function","constant":true},
+    {"inputs":[{"internalType":"string","name":"_publicKey","type":"string"}],"name":"registerUser","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[],"name":"revokeUser","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"getPublicKey","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function","constant":true},
+    {"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"isUserActive","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function","constant":true}
+  ];
+  const BACKEND_BASE = "http://localhost:5000";
+  let account = null;
 
-    async function connect() {
-      if (!window.ethereum) {
-        log("Error: MetaMask is not installed. Please install it to use this app.");
-        return;
+  // UI helpers
+  const logEl = document.getElementById('log');
+  const accountEl = document.getElementById('accountEl');
+  const networkEl = document.getElementById('networkEl');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const statusContainer = document.getElementById('statusContainer');
+  const flashOverlay = document.getElementById('flash-overlay');
+  
+  // Spotlight elements (kept for background div reference)
+  const threeBgEl = document.getElementById('three-bg');
+
+
+  function timestamp(){return new Date().toLocaleTimeString();}
+
+  // New function to trigger the dramatic screen flash
+  function triggerFlash() {
+      flashOverlay.classList.add('active');
+      setTimeout(() => {
+          flashOverlay.classList.remove('active');
+      }, 300); // Flash for 300ms
+  }
+
+  // typewriter-like append (returns a promise that resolves when typing finished)
+  function typeLog(text, opts={prepend:true, delay:12, type:'info', label:'LOG'}){
+    return new Promise((resolve)=>{
+      const wrapper = document.createElement('div');
+      wrapper.className = `line ${opts.type}`;
+      
+      const ts = `[${timestamp()}] `;
+      const fullText = ts + `<strong class="log-label">${opts.label}:</strong> ` + text;
+
+      if (opts.prepend) logEl.prepend(wrapper); else logEl.appendChild(wrapper);
+      
+      if (!opts.prepend) logEl.scrollTop = logEl.scrollHeight;
+
+      let i = ts.length + opts.label.length + 9;
+      wrapper.innerHTML = fullText.slice(0, i);
+      
+      function step(){
+        // Clean cursor animation (using current accent color)
+        wrapper.innerHTML = fullText.slice(0, i) + (i < fullText.length ? '<span style="color:var(--accent);font-weight:100;opacity: 0.8; animation: cleanCursor 0.5s infinite alternate;">█</span>' : ''); 
+        if(i++ <= fullText.length){
+          setTimeout(step, opts.delay);
+        } else {
+          wrapper.innerHTML = fullText;
+          wrapper.classList.add('show');
+          resolve();
+        }
       }
+      step();
+    });
+  }
+  // Define clean cursor animation
+  const style = document.createElement('style');
+  style.textContent = `@keyframes cleanCursor {
+      0% { opacity: 1; }
+      100% { opacity: 0.2; }
+  }`;
+  document.head.appendChild(style);
+
+
+  // function to handle button loading state
+  function setButtonLoading(btnId, isLoading, defaultText, loadingText = 'PROCESSING...'){
+    const btn = document.getElementById(btnId);
+    if (!btn) return; 
+    const textSpan = btn.querySelector('.btn-text');
+    const loaderSpan = btn.querySelector('.btn-loader');
+    
+    if (isLoading) {
+      btn.setAttribute('data-default-text', textSpan.textContent);
+      textSpan.textContent = loadingText;
+      loaderSpan.style.display = 'inline-block';
+      btn.classList.add('loading');
+      btn.disabled = true;
+      triggerFlash(); // Flash on action start
+    } else {
+      textSpan.textContent = btn.getAttribute('data-default-text') || defaultText;
+      loaderSpan.style.display = 'none';
+      btn.classList.remove('loading');
       
-      if (!checkConfig()) return;
-      
-      try {
-        const accounts = await ethereum.request({method: 'eth_requestAccounts'});
-        account = accounts[0];
-        log("Connected: "+ account);
+      // Re-enable based on connection status
+      document.getElementById('connectBtn').disabled = false;
+      if (account) {
         document.getElementById('registerBtn').disabled = false;
         document.getElementById('loginBtn').disabled = false;
-      } catch (e) {
-        log("Connection failed: " + e.message);
+      } else {
+        document.getElementById('registerBtn').disabled = true;
+        document.getElementById('loginBtn').disabled = true;
       }
     }
-    
-    async function registerOnChain() {
-      if (!account) { log("Please connect your wallet first."); return; }
-      if (!checkConfig()) return;
-      
-      const web3 = new Web3(window.ethereum);
-      const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-      const pubKeyPlaceholder = "user-metadata-or-publicKey"; 
-      
-      log("Sending registration transaction... (Please approve in MetaMask)");
-      try {
-        const tx = await contract.methods.registerUser(pubKeyPlaceholder)
-          .send({from: account});
-        log("Registration tx mined: " + tx.transactionHash);
-      } catch (e) {
-        log("Registration failed: " + e.message);
-      }
-    }
-    
-    async function login() {
-      if (!account) { log("Please connect your wallet first."); return; }
-      if (!checkConfig()) return;
-      
-      log("Requesting challenge from backend...");
-      let res, challengeJson;
-      try {
-        res = await fetch(BACKEND_BASE + "/challenge", {
-          method: "POST",
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({address: account})
-        });
-        challengeJson = await res.json();
-      } catch (e) {
-        log("Fetch error: Could not reach backend. Is it running? " + e.message);
-        return;
-      }
+  }
 
-      if (!res.ok) {
-        log("Challenge error: " + (challengeJson.error || JSON.stringify(challengeJson)));
-        return;
+  function setStatus(connected, account=null, network=null){
+    if(connected){
+      statusContainer.classList.add('status-connected');
+      statusText.textContent = 'ONLINE'; // Use ONLINE
+      accountEl.textContent = account ? account.substring(0,6) + '...' + account.substring(account.length - 4) : accountEl.textContent;
+      networkEl.textContent = network || networkEl.textContent;
+      document.getElementById('registerBtn').disabled=false;
+      document.getElementById('loginBtn').disabled=false;
+    } else {
+      statusContainer.classList.remove('status-connected');
+      statusDot.style.background = '#ff3366'; 
+      statusDot.style.boxShadow = '0 0 8px #ff3366';
+      statusText.textContent = 'OFFLINE'; // Use OFFLINE
+      accountEl.textContent = '— UNKNOWN —';
+      networkEl.textContent = '—';
+      document.getElementById('registerBtn').disabled=true;
+      document.getElementById('loginBtn').disabled=true;
+    }
+  }
+
+  // tiny confetti (blue/cyan particles)
+  function confettiBurst(){
+    const count = 15; 
+    const colors=['#0077ff','#00ffff','#e0f7fa'];
+    for(let i=0;i<count;i++){
+      const el = document.createElement('div');
+      el.style.position='fixed';el.style.width='6px';el.style.height='6px';el.style.borderRadius='50%';
+      el.style.left=(50+ (Math.random()*40-20))+'%';el.style.top=(60+ (Math.random()*10-40))+'%';
+      el.style.background = colors[i%colors.length];
+      el.style.transform='translateY(0) rotate('+ (Math.random()*360) +'deg)';el.style.opacity='1';el.style.zIndex=9999;el.style.pointerEvents='none';
+      el.style.transition='transform 900ms cubic-bezier(.12,.8,.3,1),opacity 900ms ease';
+      el.style.boxShadow = `0 0 8px ${el.style.background}`; 
+      document.body.appendChild(el);
+      requestAnimationFrame(()=>{
+        el.style.transform = `translate(${(Math.random()*180-90)}px,${-180 - Math.random()*280}px) rotate(${Math.random()*720}deg)`;
+        el.style.opacity='0';
+      });
+      setTimeout(()=>el.remove(),1000+Math.random()*500);
+    }
+  }
+
+  // ---------- MOUSE TRAIL LOGIC (Digital Wake) ----------
+
+  let trailElements = [];
+  const TRAIL_COUNT = 20;
+  let currentTrailIndex = 0;
+
+  function initTrail() {
+      for (let i = 0; i < TRAIL_COUNT; i++) {
+          const dot = document.createElement('div');
+          dot.className = 'trail-dot';
+          document.body.appendChild(dot);
+          trailElements.push(dot);
       }
+  }
+
+  document.addEventListener('mousemove', (e) => {
+      // 1. Get the next element in the queue
+      const dot = trailElements[currentTrailIndex];
+      currentTrailIndex = (currentTrailIndex + 1) % TRAIL_COUNT;
+
+      // 2. Set position instantly (disable transition)
+      dot.style.transition = 'none'; 
+      dot.style.left = `${e.clientX}px`;
+      dot.style.top = `${e.clientY}px`;
+      dot.style.opacity = '1';
+      dot.style.transform = 'translate(-50%, -50%) scale(1)';
       
-      const nonce = challengeJson.nonce;
-      log("Received nonce: " + nonce);
+      // 3. Trigger the animation slightly later (via requestAnimationFrame for smooth drawing)
+      requestAnimationFrame(() => {
+          dot.style.transition = 'opacity 0.6s ease-out, transform 0.8s ease-out';
+          dot.style.opacity = '0';
+          // Give it a random drift and fade effect
+          const driftX = Math.random() * 50 - 25;
+          const driftY = Math.random() * 50 - 25;
+          dot.style.transform = `translate(calc(-50% + ${driftX}px), calc(-50% + ${driftY}px)) scale(0.1)`;
+      });
+  });
+
+
+  // ---------- MetaMask + Web3 interactions (functionality maintained) ----------
+
+  function checkConfig(){
+    if(!CONTRACT_ABI || CONTRACT_ABI.length===0){typeLog('CONTRACT_ABI MISSING', {type:'error'});return false}
+    if(!CONTRACT_ADDRESS || CONTRACT_ADDRESS === '0x...'){typeLog('CONTRACT_ADDRESS NOT CONFIGURED', {type:'error'});return false}
+    return true;
+  }
+
+  async function connect(){
+    const btnId = 'connectBtn';
+    setButtonLoading(btnId, true, 'CONNECT WALLET', 'ACCESSING DATAPORT...');
     
-      // Use MetaMask to sign the message
-      log("Please sign the message in MetaMask...");
-      let signature;
-      try {
-        signature = await ethereum.request({
-          method: 'personal_sign',
-          params: [nonce, account]
-        });
-      } catch (e) {
-        log("Signature failed: " + e.message);
-        return;
-      }
+    if(!window.ethereum){
+      await typeLog('ERROR 404: METAMASK NOT DETECTED. INSTALL EXTENSION TO PROCEED.', {type:'error', label:'WEB3'});
+      setButtonLoading(btnId, false, 'CONNECT WALLET');
+      return;
+    }
+    if(!checkConfig()){
+      setButtonLoading(btnId, false, 'CONNECT WALLET');
+      return;
+    }
+    try{
+      await typeLog('INITIATING WALLET AUTHENTICATION PROTOCOL...', {label:'WALLET'});
+      const accounts = await ethereum.request({method:'eth_requestAccounts'});
+      account = accounts[0];
+      const chainId = await ethereum.request({method:'eth_chainId'});
       
-      log("Signature: " + signature.substring(0, 40) + "...");
+      setStatus(true, account, 'CHAIN:' + parseInt(chainId, 16));
+      await typeLog('STATUS 200: WALLET CONNECTION SECURE. IDENTITY: ' + account, {type:'success', label:'WALLET'});
+    } catch(e){
+      await typeLog('CONNECTION FAILURE: ' + (e.message || String(e)).toUpperCase(), {type:'error', label:'WALLET'});
+    } finally {
+      setButtonLoading(btnId, false, 'CONNECT WALLET');
+    }
+  }
+
+  async function registerOnChain(){
+    const btnId = 'registerBtn';
+    if(!account){await typeLog('ERROR: ACCOUNT UNKNOWN. CONNECT WALLET FIRST.', {type:'error'});return}
+    if(!checkConfig()) return;
     
-      // Send signature to backend for verification
-      log("Verifying signature with backend...");
-      let verifyRes, verifyJson;
-      try {
-        verifyRes = await fetch(BACKEND_BASE + "/verify", {
-          method: "POST",
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({address: account, signature})
-        });
-        verifyJson = await verifyRes.json();
-      } catch (e) {
-        log("Fetch error: Could not reach backend. " + e.message);
-        return;
-      }
+    setButtonLoading(btnId, true, 'REGISTER IDENTITY', 'BROADCASTING TRANSACTION...');
+    const web3 = new Web3(window.ethereum);
+    const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    const pubKeyPlaceholder = 'user-metadata-or-publicKey-encrypted'; 
+
+    try{
+      await typeLog('EXECUTING CONTRACT METHOD: `REGISTERUSER("...")`', {label:'CONTRACT'});
       
-      if (!verifyRes.ok) {
-        log("Verify failed: " + (verifyJson.error || JSON.stringify(verifyJson)));
-        return;
-      }
+      const tx = await contract.methods.registerUser(pubKeyPlaceholder).send({from:account});
       
-      log("✅ Auth success! Token: " + verifyJson.token.substring(0, 40) + "...");
+      setButtonLoading(btnId, true, 'REGISTER IDENTITY', 'TRANSACTION CONFIRMED...');
+      await typeLog('TX SUCCESS: IDENTITY REGISTERED ON-CHAIN. HASH: ' + tx.transactionHash.substring(0,10) + '...', {type:'success', label:'CONTRACT'});
+      confettiBurst();
+      
+    }catch(e){
+      await typeLog('TX REJECTED: ' + (e.message && e.message.includes('User denied') ? 'TRANSACTION DENIED BY USER.' : 'TRANSACTION ERROR OCCURRED.'), {type:'error', label:'CONTRACT'});
+    }finally{
+      setButtonLoading(btnId, false, 'REGISTER IDENTITY');
+    }
+  }
+
+  async function login(){
+    const btnId = 'loginBtn';
+    if(!account){await typeLog('ERROR: ACCOUNT UNKNOWN. CONNECT WALLET FIRST.', {type:'error'});return}
+    if(!checkConfig()) return;
+    
+    setButtonLoading(btnId, true, 'ACCESS PROTOCOL', 'REQUESTING CHALLENGE NONCE...');
+
+    let res, json;
+    try{
+      await typeLog('SENDING IDENTITY ' + account.substring(0,6) + ' TO BACKEND FOR AUTH CHALLENGE...', {label:'BACKEND'});
+      res = await fetch(BACKEND_BASE + '/challenge', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:account})});
+      json = await res.json();
+    }catch(e){
+      await typeLog('BACKEND OFFLINE: COULD NOT CONNECT TO API SERVER.', {type:'error', label:'BACKEND'});
+      setButtonLoading(btnId, false, 'ACCESS PROTOCOL');
+      return
+    }
+
+    if(!res.ok){
+      await typeLog('API ERROR: ' + (json.error || 'CHALLENGE REQUEST FAILED.').toUpperCase(), {type:'error', label:'BACKEND'});
+      setButtonLoading(btnId, false, 'ACCESS PROTOCOL');
+      return
     }
     
-    document.getElementById('connectBtn').onclick = connect;
-    document.getElementById('registerBtn').onclick = registerOnChain;
-    document.getElementById('loginBtn').onclick = login;
+    const nonce = json.nonce;
+    await typeLog('NONCE RECEIVED. AWAITING USER SIGNATURE...', {label:'WALLET'});
+    setButtonLoading(btnId, true, 'ACCESS PROTOCOL', 'SIGNATURE PENDING...');
+
+    let signature;
+    try{
+      signature = await ethereum.request({method:'personal_sign',params:[nonce, account]});
+    }catch(e){
+      await typeLog('SIGNATURE DENIED: ' + (e.message && e.message.includes('User denied') ? 'USER DECLINED SIGNATURE.' : 'SIGNATURE FAILED.'), {type:'error', label:'WALLET'});
+      setButtonLoading(btnId, false, 'ACCESS PROTOCOL');
+      return
+    }
+
+    await typeLog('SIGNATURE OBTAINED. TRANSMITTING TO API FOR VERIFICATION...', {label:'BACKEND'});
+    setButtonLoading(btnId, true, 'ACCESS PROTOCOL', 'VERIFYING CREDENTIALS...');
+
+    let verifyRes, verifyJson;
+    try{
+      verifyRes = await fetch(BACKEND_BASE + '/verify', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:account,signature})});
+      verifyJson = await verifyRes.json();
+    }catch(e){
+      await typeLog('VERIFICATION FAILED: COULD NOT REACH API SERVER.', {type:'error', label:'BACKEND'});
+      setButtonLoading(btnId, false, 'ACCESS PROTOCOL');
+      return
+    }
+
+    if(!verifyRes.ok){
+      await typeLog('VERIFICATION FAILED: ' + (verifyJson.error || 'AUTHENTICATION TOKEN DENIED.').toUpperCase(), {type:'error', label:'BACKEND'});
+      setButtonLoading(btnId, false, 'ACCESS PROTOCOL');
+      return
+    }
     
-    // Clear log on start
-    logEl.textContent = "Awaiting connection...\n";
+    await typeLog('AUTHENTICATION GRANTED. SECURE TOKEN OBTAINED.', {type:'success', label:'SYSTEM'});
+    await typeLog('TOKEN: [ENCRYPTED] ' + (verifyJson.token? verifyJson.token.substring(0,30) + '...' : '<NO TOKEN>'), {type:'success', label:'TOKEN'});
+
+    // show celebratory UI
+    confettiBurst();
+    setButtonLoading(btnId, false, 'ACCESS PROTOCOL');
+  }
+
+  // attach events
+  document.getElementById('connectBtn').addEventListener('click', async (e)=>{await connect();});
+  document.getElementById('registerBtn').addEventListener('click', async (e)=>{await registerOnChain();});
+  document.getElementById('loginBtn').addEventListener('click', async (e)=>{await login();});
+
+  // auto-inform if accounts change
+  if(window.ethereum){
+    ethereum.on('accountsChanged', (accs)=>{ 
+        if(accs.length){
+            account=accs[0]; 
+            setStatus(true, account); 
+            typeLog('IDENTITY SWITCHED: '+account, {label:'WALLET'});
+        } else {
+            account=null; 
+            setStatus(false); 
+            typeLog('WALLET DISCONNECTED BY USER. SESSION TERMINATED.', {label:'WALLET', type:'error'});
+        } 
+    });
+    ethereum.on('chainChanged', (chainId)=>{ 
+        setStatus(true, account, 'CHAIN:'+parseInt(chainId, 16)); 
+        typeLog('NETWORK CHANGE DETECTED. CHAIN ID: ' + chainId, {label:'WALLET'});
+    });
+  }
+  
+  // Start initial status message and trail initialization
+  window.onload = function() {
+      initTrail();
+      (async ()=>{ 
+          await typeLog('STATUS 100: PROTOCOL ONLINE. STANDBY FOR CONNECTION...', {type:'info', label:'SYSTEM'}); 
+          setStatus(false);
+      })();
+  };
+
 </script>
 
-<!-- Add web3.js from CDN -->
-<script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.10.0/dist/web3.min.js"></script>
+<!-- web3 --><script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.10.0/dist/web3.min.js"></script>
+<!-- Google Fonts for 'Share Tech Mono' (Cyberpunk feel) --><link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </body>
 </html>
