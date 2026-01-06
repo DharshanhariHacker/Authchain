@@ -1,0 +1,423 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>AuthChain — Public Asset Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --card: #0f0f0f;
+            --text: #e0e0e0;
+            --accent: #D4AF37;
+            --accent-glow: rgba(212, 175, 55, 0.3);
+            --accent-2: #F6Eebc;
+            --danger: #8a2be2;
+            --success: #2ecc71;
+            --font-main: 'Outfit', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg);
+            /* Subtle Texture + Canvas Underlay */
+            background-image:
+                radial-gradient(circle at 50% 0%, #1a1a1a 0%, transparent 60%);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid rgba(51, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            text-shadow: 0 0 10px var(--accent);
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: rgba(232, 250, 255, 0.7);
+            margin-bottom: 30px;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(51, 255, 255, 0.3);
+            color: #fff;
+            padding: 15px;
+            width: 100%;
+            margin-bottom: 20px;
+            font-family: inherit;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-2);
+            box-shadow: 0 0 15px rgba(51, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent), #0055ff);
+            border: 0;
+            padding: 15px 30px;
+            width: 100%;
+            border-radius: 4px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 16px;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+
+        #result {
+            margin-top: 30px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px currentColor;
+        }
+
+        .result-title {
+            font-size: 28px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .result-detail {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 2px 0;
+        }
+
+        .result-detail:last-of-type {
+            margin-bottom: 10px;
+        }
+
+        .clean {
+            color: var(--success);
+            text-shadow: 0 0 10px var(--success);
+        }
+
+        .stolen {
+            color: var(--danger);
+            text-shadow: 0 0 10px var(--danger);
+        }
+
+        .detail {
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .timeline {
+            margin-top: 20px;
+            text-align: left;
+            position: relative;
+        }
+
+        .timeline-item {
+            padding-left: 20px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+        }
+
+        .time-marker {
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 5px var(--accent-glow);
+        }
+
+        .time-content {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="particles"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000 100%);"></canvas>
+
+    <div class="container">
+        <div class="card">
+            <h1>PUBLIC ASSET VALIDATOR</h1>
+            <p>Enter Asset ID to verify chain-of-custody status.</p>
+
+            <input type="text" id="assetId" placeholder="AST-XXXX-XXXX">
+            <button class="btn" onclick="verify()">VERIFY STATUS</button>
+
+            <div id="result" style="display:none">
+                <div id="statusIcon" class="status-icon"></div>
+                <div id="statusText" class="result-title"></div>
+                <div class="result-detail" id="type"></div>
+                <div class="result-detail" id="desc"></div>
+                <div class="result-detail" style="margin-top:15px; font-size:10px; opacity:0.5; letter-spacing:1px">
+                    VERIFIED BY AUTHCHAIN PROTOCOL</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND = window.location.protocol === 'file:' ? "http://localhost:5000" : "";
+
+        // Check URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const idParam = urlParams.get('id');
+        if (idParam) {
+            document.getElementById('assetId').value = idParam;
+            verify();
+        }
+
+        async function verify() {
+            const id = document.getElementById('assetId').value;
+            if (!id) return;
+
+            const res = await fetch(BACKEND + "/api/verify-asset/" + id);
+            const resultDiv = document.getElementById('result');
+            const statusText = document.getElementById('statusText');
+            const statusIcon = document.getElementById('statusIcon');
+
+            resultDiv.style.display = "flex"; // Changed from block to flex for column layout
+
+            if (res.status === 404) {
+                statusIcon.textContent = "⚠️";
+                statusText.textContent = "INVALID ID";
+                statusText.className = "result-title";
+                statusText.style.color = "orange";
+                document.getElementById('type').textContent = "Asset not found in registry.";
+                document.getElementById('desc').textContent = "";
+                return;
+            }
+
+            const data = await res.json();
+
+            if (data.status === "CLEAN") {
+                statusIcon.textContent = "✅";
+                statusText.textContent = "VERIFIED CLEAN";
+                statusText.className = "result-title clean";
+            } else {
+                statusIcon.textContent = "⛔"; // Or use another icon
+                statusText.textContent = "REPORTED STOLEN";
+                statusText.className = "result-title stolen";
+            }
+
+            document.getElementById('type').textContent = "CATEGORY: " + data.type;
+            document.getElementById('desc').textContent = "DESC: " + data.description;
+
+            // Render Proof Data
+            const proofDiv = document.createElement('div');
+            proofDiv.style.marginTop = "20px";
+            proofDiv.style.textAlign = "left";
+            proofDiv.innerHTML = `
+                <div style="font-size:12px; color:var(--accent-2); margin-bottom:5px">⛓️ DIGITAL PROOF (SHA256)</div>
+                <div style="background:rgba(0,0,0,0.5); padding:10px; border-radius:4px; font-family:monospace; font-size:10px; word-break:break-all; border:1px solid #334">
+                    ${data.proofHash || "NO PROOF DOCUMENT REGISTERED"}
+                </div>
+            `;
+            document.getElementById('result').insertBefore(proofDiv, document.getElementById('timeline'));
+
+            if (data.imageUrl) {
+                const imgDiv = document.createElement('div');
+                imgDiv.style.marginTop = "15px";
+                imgDiv.innerHTML = `
+                    <div style="font-size:12px; color:#fff; margin-bottom:5px; text-align:left">📷 ASSET IMAGE</div>
+                    <img src="${BACKEND + data.imageUrl}" style="width:100%; border-radius:8px; border:2px solid #333; box-shadow:0 5px 15px rgba(0,0,0,0.5)">
+                `;
+                document.getElementById('result').insertBefore(imgDiv, document.getElementById('timeline'));
+            }
+            let timelineDiv = document.getElementById('timeline');
+            if (!timelineDiv) {
+                timelineDiv = document.createElement('div');
+                timelineDiv.id = 'timeline';
+                timelineDiv.className = 'timeline';
+                resultDiv.appendChild(timelineDiv);
+            }
+            timelineDiv.innerHTML = '<h3 style="margin-top:20px; font-size:14px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; color:var(--accent-2)">CHAIN OF CUSTODY</h3>';
+
+            if (data.history && data.history.length > 0) {
+                // Check if currently owned by Burn Address
+                const lastEvent = data.history[0]; // Newest event
+                const BURN_ADDRESS = "0x000000000000000000000000000000000000dEaD";
+
+                if (lastEvent.to.toLowerCase() === BURN_ADDRESS.toLowerCase()) {
+                    statusIcon.textContent = "🗑️";
+                    statusText.textContent = "ASSET SCRAPPED";
+                    statusText.className = "result-title";
+                    statusText.style.color = "#aaa"; // Gray
+                }
+
+                data.history.forEach((event, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'timeline-item';
+
+                    const date = new Date(event.timestamp * 1000).toLocaleString();
+                    const isGenesis = event.from === "0x0000000000000000000000000000000000000000";
+                    const isBurn = event.to.toLowerCase() === BURN_ADDRESS.toLowerCase();
+
+                    let title = isGenesis ? "ORIGIN MANUFACTURE" : "OWNERSHIP TRANSFER";
+                    if (isBurn) title = "ASSET DESTROYED / SCRAPPED";
+
+                    let desc = isGenesis
+                        ? `Registered by ${shortAddr(event.to)}`
+                        : `From ${shortAddr(event.from)} → To ${shortAddr(event.to)}`;
+
+                    if (isBurn) desc = `Sent to Burn Address by ${shortAddr(event.from)}`;
+
+                    item.innerHTML = `
+                        <div class="time-marker" style="${isBurn ? 'background:#555; box-shadow:none' : ''}"></div>
+                        <div class="time-content">
+                            <div style="font-weight:bold; color:${isGenesis ? 'var(--accent)' : (isBurn ? '#aaa' : '#fff')}">${title}</div>
+                            <div style="font-size:12px; opacity:0.7">${desc}</div>
+                            <div style="font-size:10px; opacity:0.4">${date}</div>
+                        </div>
+                    `;
+                    timelineDiv.appendChild(item);
+                });
+            }
+        }
+
+        function shortAddr(addr) {
+            return addr.substring(0, 6) + "..." + addr.substring(38);
+        }
+    </script>
+    <script>
+        // --- ADVANCED PARTICLE SYSTEM ---
+        const cvs = document.getElementById('particles');
+        const ctx = cvs.getContext('2d');
+        let nodes = [];
+        const mouse = { x: -100, y: -100 };
+        function resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        class Node {
+            constructor() {
+                this.x = Math.random() * cvs.width; this.y = Math.random() * cvs.height;
+                this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > cvs.width) this.vx *= -1;
+                if (this.y < 0 || this.y > cvs.height) this.vy *= -1;
+                const dx = this.x - mouse.x; const dy = this.y - mouse.y;
+                if (Math.sqrt(dx * dx + dy * dy) < 150) {
+                    const angle = Math.atan2(dy, dx);
+                    this.x += Math.cos(angle) * 2; this.y += Math.sin(angle) * 2;
+                }
+            }
+            draw() {
+                ctx.fillStyle = '#D4AF37'; ctx.globalAlpha = 0.5;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        for (let i = 0; i < 80; i++) nodes.push(new Node());
+        function animate() {
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            ctx.strokeStyle = '#D4AF37'; ctx.lineWidth = 0.5;
+            for (let i = 0; i < nodes.length; i++) {
+                nodes[i].update(); nodes[i].draw();
+                for (let j = i; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x; const dy = nodes[i].y - nodes[j].y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < 100) {
+                        ctx.globalAlpha = 1 - (d / 100); ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke();
+                    }
+                }
+                const mdx = nodes[i].x - mouse.x; const mdy = nodes[i].y - mouse.y;
+                if (Math.sqrt(mdx * mdx + mdy * mdy) < 150) {
+                    ctx.globalAlpha = 1 - (Math.sqrt(mdx * mdx + mdy * mdy) / 150); ctx.beginPath();
+                    ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+
+</html>

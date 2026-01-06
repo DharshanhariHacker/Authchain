@@ -1,0 +1,680 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>AuthChain — Asset Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --card: #0f0f0f;
+            --text: #e0e0e0;
+            --accent: #D4AF37;
+            /* Metallic Gold */
+            --accent-glow: rgba(212, 175, 55, 0.3);
+            --accent-2: #F6Eebc;
+            /* Pale Gold */
+            --danger: #8a2be2;
+            /* Deep Purple for "Destructive" to fit luxury */
+            --success: #2ecc71;
+            --font-main: 'Outfit', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg);
+            /* Subtle Texture */
+            background-image:
+                radial-gradient(circle at 50% 0%, #1a1a1a 0%, transparent 60%),
+                linear-gradient(0deg, #050505 0%, #0a0a0a 100%);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes goldPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+            }
+        }
+
+        header {
+            width: 100%;
+            max-width: 900px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            padding: 0 20px;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 4px;
+            /* Sharper corners for luxury */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Gold Top Border for Cards */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.5;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-glow);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        h3 {
+            margin-top: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #222, #333);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: var(--font-main);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+
+        .btn:hover {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .btn.danger {
+            border-color: #555;
+            color: #888;
+            background: transparent;
+        }
+
+        .btn.danger:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            box-shadow: none;
+        }
+
+        /* Form Inputs */
+        input,
+        select {
+            background: #0a0a0a !important;
+            border: 1px solid #333 !important;
+            color: #fff !important;
+            font-family: var(--font-main) !important;
+            border-radius: 2px !important;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent) !important;
+        }
+
+
+
+        .btn.danger:hover {
+            background: rgba(255, 51, 102, 0.1);
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.4);
+        }
+
+        input,
+        select {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(51, 255, 255, 0.3);
+            color: #fff;
+            padding: 12px;
+            width: 100%;
+            margin-bottom: 15px;
+            font-family: inherit;
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent-2);
+            box-shadow: 0 0 10px rgba(51, 255, 255, 0.2);
+        }
+
+        .asset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        /* Scrollbar styling */
+        .asset-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .asset-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .asset-list::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .asset-item {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            padding: 15px;
+            border-left: 3px solid var(--accent);
+            border-radius: 0 4px 4px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .asset-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-CLEAN {
+            background: rgba(57, 255, 20, 0.15);
+            color: var(--success);
+            border: 1px solid var(--success);
+            box-shadow: 0 0 5px rgba(57, 255, 20, 0.3);
+        }
+
+        .status-STOLEN {
+            background: rgba(255, 51, 102, 0.15);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            box-shadow: 0 0 5px rgba(255, 51, 102, 0.3);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.9);
+            color: var(--accent-2);
+            padding: 15px 25px;
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            display: none;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+        }
+
+        @keyframes popUp {
+            from {
+                transform: scale(0.8) translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="particles"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000 100%);"></canvas>
+
+    <header>
+        <h1>ASSET DASHBOARD</h1>
+        <button class="btn danger" onclick="logout()">LOGOUT</button>
+    </header>
+
+    <div class="container">
+        <div class="card" style="margin-bottom: 30px; text-align: left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px">
+                <div style="flex:1; min-width:200px">
+                    <h2 style="margin:0; font-size:18px; display:flex; align-items:center; gap:10px">
+                        Identity:
+                        <span id="userAddr"
+                            style="font-family:monospace; color:var(--accent-2); background:rgba(0,255,163,0.1); padding:2px 8px; border-radius:4px; font-size:16px">Loading...</span>
+                    </h2>
+                    <p style="margin:5px 0; opacity:0.7; font-size:12px">Managed Assets: <span id="count">0</span></p>
+                </div>
+                <button class="btn" style="width:auto; white-space:nowrap" onclick="openRegModal()">+ REGISTER NEW
+                    ASSET</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>YOUR ASSETS <span id="listHeaderCount" style="color:var(--accent-2)">0</span></h3>
+            <div id="list" class="asset-list">
+                <!-- Items here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="regModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100; justify-content:center; align-items:center">
+        <div class="card" style="width:400px; text-align:left">
+            <h3>REGISTER NEW ASSET</h3>
+            <div style="display:flex; gap:5px; margin-bottom:10px">
+                <input type="text" id="regId" placeholder="Asset ID (e.g. Serial Number / VIN)" class="input-field"
+                    style="flex:1; margin-bottom:0; background:#222; border:1px solid #444; color:#fff; padding:10px">
+                <button class="btn" style="width:auto; padding:0 10px; font-size:10px; background:#444"
+                    onclick="document.getElementById('regId').value = 'AST-' + Math.random().toString(36).substr(2, 6).toUpperCase()">GENERATE</button>
+            </div>
+
+            <label style="font-size:12px; opacity:0.7">Category</label>
+            <select id="regType"
+                style="width:100%; margin-bottom:10px; background:#222; border:1px solid #444; color:#fff; padding:10px">
+                <option value="Electronics">Electronics</option>
+                <option value="Luxury Watch">Luxury Watch</option>
+                <option value="Real Estate">Real Estate</option>
+                <option value="Vehicle">Vehicle</option>
+                <option value="Jewelry">Jewelry</option>
+                <option value="Art & Collectibles">Art & Collectibles</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <input type="text" id="regDesc" placeholder="Description (Model, Specs)" class="input-field"
+                style="width:100%; margin-bottom:10px; background:#222; border:1px solid #444; color:#fff; padding:10px">
+
+            <label style="font-size:12px; opacity:0.7">Proof of Authenticity (Image/Doc)</label>
+            <input type="file" id="regProof" style="margin-bottom:20px; color:#fff">
+
+            <div style="display:flex; gap:10px">
+                <button class="btn" style="flex:1" onclick="submitRegistration()">REGISTER</button>
+                <button class="btn danger" style="flex:1; background:#555" onclick="closeModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Action Complete</div>
+
+    <script>
+        const BACKEND = window.location.protocol === 'file:' ? "http://localhost:5000" : "";
+        let token = localStorage.getItem("auth_token");
+
+        if (!token) window.location.href = "index.html";
+
+        function openRegModal() {
+            document.getElementById('regModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('regModal').style.display = 'none';
+        }
+
+        async function submitRegistration() {
+            try {
+                // console.log("Submit clicked");
+                const id = document.getElementById('regId').value;
+                const type = document.getElementById('regType').value;
+                const desc = document.getElementById('regDesc').value;
+                const fileInput = document.getElementById('regProof');
+
+                if (!id || !desc) {
+                    alert("Please fill all fields");
+                    return;
+                }
+
+                showToast("Registering... Please Wait.");
+                closeModal();
+
+                const formData = new FormData();
+                formData.append("id", id);
+                formData.append("type", type);
+                formData.append("description", desc);
+                if (fileInput.files[0]) {
+                    formData.append("proof", fileInput.files[0]);
+                }
+
+                const res = await fetch(BACKEND + "/api/assets/register", {
+                    method: "POST",
+                    headers: { "Authorization": "Bearer " + token },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (data.status === "success") {
+                    showToast("Registration Successful!");
+                    setTimeout(loadAssets, 1000); // Wait a bit for blockchain sync
+                } else {
+                    alert("Server Error: " + data.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Client Error: " + e.message);
+            }
+        }
+
+        async function loadAssets() {
+            try {
+                const res = await fetch(BACKEND + "/api/assets/list", { headers: { "Authorization": "Bearer " + token } });
+                if (res.status === 401) logout();
+                const data = await res.json();
+                const addr = data.user || "Unknown";
+                // Show 0x1234...5678 (First 6 + Last 4)
+                const shortAddr = addr.length > 10 ? addr.substring(0, 6) + "..." + addr.substring(addr.length - 4) : addr;
+                document.getElementById("userAddr").textContent = shortAddr;
+                document.getElementById("userAddr").title = addr; // Tooltip shows full address
+                renderList(data.assets);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderList(assets) {
+            const list = document.getElementById("list");
+            document.getElementById("count").textContent = assets.length;
+            document.getElementById("listHeaderCount").textContent = assets.length;
+
+            list.innerHTML = "";
+            assets.forEach(asset => {
+                const div = document.createElement("div");
+                div.className = "asset-item";
+                // Improved Flex Layout for Mobile/Desktop
+                div.style.flexWrap = "wrap";
+                div.style.gap = "15px";
+
+                div.innerHTML = `
+                    <div style="flex:1; min-width:200px">
+                        <div style="font-weight:bold; font-size:16px; color:#fff; margin-bottom:5px">${asset.type} <span class="status-badge status-${asset.status}">${asset.status}</span></div>
+                        <div style="font-size:13px; color:var(--accent-2); margin-bottom:3px">${asset.description}</div>
+                        <div style="font-size:10px; opacity:0.5; font-family:monospace">ID: ${asset.id}</div>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+                        <button class="btn" style="padding:8px 12px; font-size:11px" onclick="window.open('verify-asset.html?id=${asset.id}', '_blank')">🔗 Proof</button>
+                        <button class="btn" style="padding:8px 12px; font-size:11px; background:linear-gradient(to right, #9c27b0, #E91E63)" onclick="transferAsset('${asset.id}')">➡️ Transfer</button>
+                        ${asset.status === 'CLEAN'
+                        ? `<button class="btn danger" style="padding:8px 12px; font-size:11px" onclick="report('${asset.id}', 'STOLEN')">🚨 Report Stolen</button>`
+                        : `<button class="btn" style="padding:8px 12px; font-size:11px; background:#4CAF50" onclick="report('${asset.id}', 'CLEAN')">✅ Recover</button>`
+                    }
+                        <button class="btn danger" style="padding:8px 12px; font-size:11px; border-color:#555; color:#aaa; background:transparent" onclick="scrapAsset('${asset.id}')">🗑️</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function scrapAsset(id) {
+            if (!confirm(`Are you sure you want to SCRAP (Destroy) this asset?\nIt will be sent to the 'Burn Address' and cannot be recovered.`)) return;
+
+            // The standard Ethereum 'Burn Address'
+            const BURN_ADDRESS = "0x000000000000000000000000000000000000dEaD";
+
+            try {
+                const res = await fetch(BACKEND + "/api/assets/transfer", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify({ asset_id: id, new_owner: BURN_ADDRESS })
+                });
+
+                const data = await res.json();
+                if (data.status === "success") {
+                    showToast("Asset Scrapped/Destroyed!");
+                    loadAssets();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Scrap Failed");
+            }
+        }
+
+        async function transferAsset(id) {
+            const newOwner = prompt("ENTER RECIPIENT WALLET ADDRESS:\n(e.g., 0x123...)");
+            if (!newOwner) return;
+
+            // Simple validation
+            if (!newOwner.startsWith("0x") || newOwner.length !== 42) {
+                alert("Invalid Ethereum Address format.");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to TRANSFER ownership of ${id} to ${newOwner}?\nThis cannot be undone.`)) return;
+
+            try {
+                const res = await fetch(BACKEND + "/api/assets/transfer", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify({ asset_id: id, new_owner: newOwner })
+                });
+
+                const data = await res.json();
+                if (data.status === "success") {
+                    showToast("Transfer Successful!");
+                    loadAssets(); // Refresh list (item should disappear)
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Transfer Failed");
+            }
+        }
+
+
+
+        async function report(id, status) {
+            if (!confirm(`Mark asset as ${status}?`)) return;
+            await fetch(BACKEND + "/api/assets/report", {
+                method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                body: JSON.stringify({ asset_id: id, status })
+            });
+            loadAssets();
+            showToast(`Asset marked as ${status}`);
+        }
+
+        function copyLink(id) {
+            const url = `${window.location.origin}/verify-asset.html?id=${id}`;
+
+            // Try modern HTTPS clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast("Verification Link Copied!");
+                }).catch(() => fallbackCopy(url));
+            } else {
+                fallbackCopy(url);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed"; // Avoid scrolling
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) showToast("Link Copied!");
+                else prompt("Copy this link manually:", text);
+            } catch (err) {
+                prompt("Copy this link manually:", text);
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.textContent = msg; t.style.display = "block";
+            setTimeout(() => t.style.display = "none", 3000);
+        }
+
+        function logout() {
+            fetch(BACKEND + "/logout", { method: "POST", headers: { "Authorization": "Bearer " + token } });
+            localStorage.removeItem("auth_token");
+            window.location.href = "index.html";
+        }
+
+        loadAssets();
+    </script>
+    <script>
+        // --- ADVANCED PARTICLE SYSTEM ---
+        const cvs = document.getElementById('particles');
+        const ctx = cvs.getContext('2d');
+        let nodes = [];
+        const mouse = { x: -100, y: -100 };
+        function resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        class Node {
+            constructor() {
+                this.x = Math.random() * cvs.width; this.y = Math.random() * cvs.height;
+                this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > cvs.width) this.vx *= -1;
+                if (this.y < 0 || this.y > cvs.height) this.vy *= -1;
+                const dx = this.x - mouse.x; const dy = this.y - mouse.y;
+                if (Math.sqrt(dx * dx + dy * dy) < 150) {
+                    const angle = Math.atan2(dy, dx);
+                    this.x += Math.cos(angle) * 2; this.y += Math.sin(angle) * 2;
+                }
+            }
+            draw() {
+                ctx.fillStyle = '#D4AF37'; ctx.globalAlpha = 0.5;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        for (let i = 0; i < 80; i++) nodes.push(new Node());
+        function animate() {
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            ctx.strokeStyle = '#D4AF37'; ctx.lineWidth = 0.5;
+            for (let i = 0; i < nodes.length; i++) {
+                nodes[i].update(); nodes[i].draw();
+                for (let j = i; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x; const dy = nodes[i].y - nodes[j].y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < 100) {
+                        ctx.globalAlpha = 1 - (d / 100); ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke();
+                    }
+                }
+                const mdx = nodes[i].x - mouse.x; const mdy = nodes[i].y - mouse.y;
+                if (Math.sqrt(mdx * mdx + mdy * mdy) < 150) {
+                    ctx.globalAlpha = 1 - (Math.sqrt(mdx * mdx + mdy * mdy) / 150); ctx.beginPath();
+                    ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+
+</html>
