@@ -13,12 +13,12 @@
             --card: #0f0f0f;
             --text: #e0e0e0;
             --accent: #D4AF37;
-            /* Metallic Gold */
+
             --accent-glow: rgba(212, 175, 55, 0.3);
             --accent-2: #F6Eebc;
-            /* Pale Gold */
+
             --danger: #8a2be2;
-            /* Deep Purple for "Destructive" to fit luxury */
+
             --success: #2ecc71;
             --font-main: 'Outfit', sans-serif;
             --font-mono: 'Share Tech Mono', monospace;
@@ -27,7 +27,7 @@
         body {
             font-family: var(--font-main);
             background-color: var(--bg);
-            /* Subtle Texture */
+
             background-image:
                 radial-gradient(circle at 50% 0%, #1a1a1a 0%, transparent 60%),
                 linear-gradient(0deg, #050505 0%, #0a0a0a 100%);
@@ -39,7 +39,7 @@
             min-height: 100vh;
         }
 
-        /* Animations */
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -102,7 +102,7 @@
             background: var(--card);
             padding: 30px;
             border-radius: 4px;
-            /* Sharper corners for luxury */
+
             border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             transition: all 0.3s ease;
@@ -110,7 +110,7 @@
             overflow: hidden;
         }
 
-        /* Gold Top Border for Cards */
+
         .card::before {
             content: '';
             position: absolute;
@@ -173,7 +173,7 @@
             box-shadow: none;
         }
 
-        /* Form Inputs */
+
         input,
         select {
             background: #0a0a0a !important;
@@ -227,7 +227,7 @@
             padding-right: 5px;
         }
 
-        /* Scrollbar styling */
+
         .asset-list::-webkit-scrollbar {
             width: 5px;
         }
@@ -351,7 +351,7 @@
         <div class="card">
             <h3>YOUR ASSETS <span id="listHeaderCount" style="color:var(--accent-2)">0</span></h3>
             <div id="list" class="asset-list">
-                <!-- Items here -->
+
             </div>
         </div>
     </div>
@@ -410,7 +410,7 @@
 
         async function submitRegistration() {
             try {
-                // console.log("Submit clicked");
+
                 const id = document.getElementById('regId').value;
                 const type = document.getElementById('regType').value;
                 const desc = document.getElementById('regDesc').value;
@@ -441,7 +441,7 @@
                 const data = await res.json();
                 if (data.status === "success") {
                     showToast("Registration Successful!");
-                    setTimeout(loadAssets, 1000); // Wait a bit for blockchain sync
+                    setTimeout(loadAssets, 1000);
                 } else {
                     alert("Server Error: " + data.error);
                 }
@@ -457,10 +457,10 @@
                 if (res.status === 401) logout();
                 const data = await res.json();
                 const addr = data.user || "Unknown";
-                // Show 0x1234...5678 (First 6 + Last 4)
+
                 const shortAddr = addr.length > 10 ? addr.substring(0, 6) + "..." + addr.substring(addr.length - 4) : addr;
                 document.getElementById("userAddr").textContent = shortAddr;
-                document.getElementById("userAddr").title = addr; // Tooltip shows full address
+                document.getElementById("userAddr").title = addr;
                 renderList(data.assets);
             } catch (e) { console.error(e); }
         }
@@ -474,7 +474,7 @@
             assets.forEach(asset => {
                 const div = document.createElement("div");
                 div.className = "asset-item";
-                // Improved Flex Layout for Mobile/Desktop
+
                 div.style.flexWrap = "wrap";
                 div.style.gap = "15px";
 
@@ -501,7 +501,6 @@
         async function scrapAsset(id) {
             if (!confirm(`Are you sure you want to SCRAP (Destroy) this asset?\nIt will be sent to the 'Burn Address' and cannot be recovered.`)) return;
 
-            // The standard Ethereum 'Burn Address'
             const BURN_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 
             try {
@@ -531,7 +530,8 @@
             const newOwner = prompt("ENTER RECIPIENT WALLET ADDRESS:\n(e.g., 0x123...)");
             if (!newOwner) return;
 
-            // Simple validation
+            if (!newOwner) return;
+
             if (!newOwner.startsWith("0x") || newOwner.length !== 42) {
                 alert("Invalid Ethereum Address format.");
                 return;
@@ -552,7 +552,7 @@
                 const data = await res.json();
                 if (data.status === "success") {
                     showToast("Transfer Successful!");
-                    loadAssets(); // Refresh list (item should disappear)
+                    loadAssets();
                 } else {
                     alert("Error: " + data.error);
                 }
@@ -577,7 +577,6 @@
         function copyLink(id) {
             const url = `${window.location.origin}/verify-asset.html?id=${id}`;
 
-            // Try modern HTTPS clipboard API first
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(url).then(() => {
                     showToast("Verification Link Copied!");
@@ -590,7 +589,7 @@
         function fallbackCopy(text) {
             const textArea = document.createElement("textarea");
             textArea.value = text;
-            textArea.style.position = "fixed"; // Avoid scrolling
+            textArea.style.position = "fixed";
             document.body.appendChild(textArea);
             textArea.focus();
             textArea.select();
@@ -619,16 +618,13 @@
         }
 
         loadAssets();
-    </script>
-    <script>
-        // --- ADVANCED PARTICLE SYSTEM ---
+
         const cvs = document.getElementById('particles');
         const ctx = cvs.getContext('2d');
         let nodes = [];
         const mouse = { x: -100, y: -100 };
         function resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
         window.addEventListener('resize', resize);
-        resize();
         window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
         class Node {
             constructor() {

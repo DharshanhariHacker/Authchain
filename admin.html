@@ -13,7 +13,8 @@
             --card: #0f0f0f;
             --text: #e0e0e0;
             --accent: #D4AF37;
-            /* Metallic Gold */
+            --accent: #D4AF37;
+
             --accent-glow: rgba(212, 175, 55, 0.3);
             --danger: #ff3366;
             --alert: #ff0000;
@@ -24,7 +25,8 @@
         body {
             font-family: var(--font-main);
             background-color: var(--bg);
-            /* Subtle Texture */
+            background-color: var(--bg);
+
             background-image:
                 radial-gradient(circle at 50% 0%, #1a1a1a 0%, transparent 60%),
                 linear-gradient(0deg, #050505 0%, #0a0a0a 100%);
@@ -36,7 +38,7 @@
             min-height: 100vh;
         }
 
-        /* Animations */
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -111,7 +113,7 @@
             overflow: hidden;
         }
 
-        /* Police/Admin Top Border */
+
         .panel::before {
             content: '';
             position: absolute;
@@ -213,7 +215,7 @@
 
     <div class="container">
 
-        <!-- Search Module -->
+
         <div class="panel">
             <h2>DEEP INVESTIGATION</h2>
             <div style="display:flex; gap:10px">
@@ -222,7 +224,7 @@
             </div>
         </div>
 
-        <!-- Live Feed Module -->
+
         <div class="panel">
             <h2>
                 LIVE CRIME DATA FEED
@@ -238,7 +240,7 @@
     </div>
 
     <script>
-        // --- ADVANCED PARTICLE SYSTEM (Consistency) ---
+
         const cvs = document.getElementById('particles');
         const ctx = cvs.getContext('2d');
         let nodes = [];
@@ -340,7 +342,7 @@
             if (id) window.open(`verify-asset.html?id=${id}`, '_blank');
         }
 
-        // Init load
+
         loadStolen();
     </script>
 </body>

@@ -10,7 +10,6 @@ class TestAssetValidator(unittest.TestCase):
         asset_store.clear()
         self.app = app.test_client()
         
-        # Create a valid token
         self.address = "0xOwner"
         payload = {
             "sub": self.address,
@@ -23,7 +22,6 @@ class TestAssetValidator(unittest.TestCase):
 
     def test_register_and_verify(self):
         """Test asset registration and public verification"""
-        # 1. Register Asset
         res = self.app.post('/api/assets/register', 
                            headers=self.headers,
                            json={"type": "Laptop", "description": "MacBook Pro"})
@@ -31,7 +29,6 @@ class TestAssetValidator(unittest.TestCase):
         data = json.loads(res.data)
         asset_id = data["asset_id"]
         
-        # 2. Verify Publicly (Anonymous)
         res = self.app.get(f'/api/verify-asset/{asset_id}')
         self.assertEqual(res.status_code, 200)
         v_data = json.loads(res.data)
@@ -39,23 +36,20 @@ class TestAssetValidator(unittest.TestCase):
         self.assertEqual(v_data["status"], "CLEAN")
         self.assertEqual(v_data["type"], "Laptop")
         self.assertFalse(v_data["is_stolen"])
-        self.assertNotIn("owner", v_data) # Ensure privacy
+        self.assertNotIn("owner", v_data)
 
     def test_report_stolen(self):
         """Test reporting an asset as stolen"""
-        # 1. Register
         res = self.app.post('/api/assets/register', 
                            headers=self.headers,
                            json={"type": "Bike", "description": "Red Trek"})
         asset_id = json.loads(res.data)["asset_id"]
         
-        # 2. Report Stolen
         res = self.app.post('/api/assets/report',
                            headers=self.headers,
                            json={"asset_id": asset_id, "status": "STOLEN"})
         self.assertEqual(res.status_code, 200)
         
-        # 3. Verify Publicly
         res = self.app.get(f'/api/verify-asset/{asset_id}')
         v_data = json.loads(res.data)
         self.assertEqual(v_data["status"], "STOLEN")

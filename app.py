@@ -32,45 +32,41 @@ TOKEN_EXP_SECONDS = 3600
 
 nonce_cache = SimpleCache(threshold=1000, default_timeout=NONCE_EXP_SECONDS)
 token_blocklist = SimpleCache(threshold=2000, default_timeout=TOKEN_EXP_SECONDS)
-login_history_store = {} # {address: [(timestamp, ip), ...]}
-asset_store = {} # {asset_id: {owner, type, status, description, registered_at}}
+login_history_store = {} 
+asset_store = {}
 
-# --- Security: Rate Limiting Setup ---
 request_history = {}
-RATE_LIMIT_WINDOW = 60  # seconds
-MAX_REQUESTS = 10       # max requests per IP per window
+RATE_LIMIT_WINDOW = 60
+MAX_REQUESTS = 10
 LAST_CLEANUP = time.time()
-CLEANUP_INTERVAL = 300 # Clean up stale entries every 5 minutes
+CLEANUP_INTERVAL = 300
 
 def rate_limit(f):
-    """
-    Decorator to limit the rate of requests from a single IP.
-    Prevents brute-force and DoS attacks on sensitive endpoints.
-    Includes memory leak protection by cleaning up stale IPs.
-    """
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         global LAST_CLEANUP
         ip = request.remote_addr
         now = time.time()
         
-        # Periodic cleanup of stale entries to prevent memory leak
+        last_cleanup = LAST_CLEANUP
+        
+
         if now - LAST_CLEANUP > CLEANUP_INTERVAL:
             to_remove = []
             for stored_ip, timestamps in request_history.items():
-                # Keep if at least one timestamp is within the window
                 if not any(now - t < RATE_LIMIT_WINDOW for t in timestamps):
                     to_remove.append(stored_ip)
             for key in to_remove:
                 del request_history[key]
             LAST_CLEANUP = now
 
-        # Clean up old timestamps for current IP and check limit
+
         history = request_history.get(ip, [])
         history = [t for t in history if now - t < RATE_LIMIT_WINDOW]
         
         if len(history) >= MAX_REQUESTS:
-            request_history[ip] = history # Update with cleaned list
+            request_history[ip] = history
             return jsonify({"error": "Too many requests. Please try again later."}), 429
             
         history.append(now)
@@ -87,7 +83,7 @@ w3 = Web3(Web3.HTTPProvider(GANACHE_URL))
 
 @app.after_request
 def add_security_headers(response):
-    """Add HTTP headers to protect against common browser vulnerabilities."""
+
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
     return response
@@ -139,9 +135,7 @@ else:
 
 
 def jwt_required(f):
-    """
-    A decorator to protect routes with JWT authentication.
-    """
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = None
@@ -157,7 +151,6 @@ def jwt_required(f):
 
         try:
             payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            # Check if token is invalid (blocklisted)
             jti = payload.get("jti")
             if jti and token_blocklist.get(jti):
                 return jsonify({"error": "Token has been revoked"}), 401
@@ -277,15 +270,13 @@ def verify():
         "sub": address,
         "iat": int(time.time()),
         "exp": int(time.time()) + JWT_EXP_SECONDS,
-        "jti": os.urandom(16).hex() # Unique ID for revocation
+        "jti": os.urandom(16).hex()
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
     
-    # --- Login History Logic ---
     client_ip = request.remote_addr
     now = int(time.time())
     user_history = login_history_store.get(address, [])
-    # Keep last 5 logins
     user_history.insert(0, {"ip": client_ip, "time": now})
     user_history = user_history[:5]
     login_history_store[address] = user_history
@@ -320,7 +311,7 @@ def status(address):
 @app.route("/config", methods=["GET"])
 @cross_origin()
 def get_config():
-    """Returns public configuration like contract address."""
+
     return jsonify({
         "contractAddress": CONTRACT_ADDRESS,
         "networkId": "5777" # Default Ganache ID
@@ -330,10 +321,7 @@ def get_config():
 @cross_origin() 
 @jwt_required
 def protected(current_user_address):
-    """
-    An example of a protected endpoint.
-    The `current_user_address` is passed by the `jwt_required` decorator.
-    """
+
     print(f"User {current_user_address} accessed protected route.")
     return jsonify(message=f"Welcome {current_user_address}!", detail="You are accessing a protected resource.")
 
@@ -341,9 +329,7 @@ def protected(current_user_address):
 @cross_origin()
 @jwt_required
 def logout(current_user_address):
-    """
-    Revokes the current user's token adds it to the blocklist.
-    """
+
     token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization'].split(" ")[1]
@@ -353,14 +339,13 @@ def logout(current_user_address):
             payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
             jti = payload.get("jti")
             if jti:
-                # Add to blocklist for remaining lifetime
                 exp = payload.get("exp")
                 ttl = exp - int(time.time())
                 if ttl > 0:
-                    token_blocklist.set(jti, "revoked", timeout=ttl)
+                        token_blocklist.set(jti, "revoked", timeout=ttl)
                 print(f"Token revoked for user {current_user_address}")
         except Exception:
-            pass # Ignore invalid tokens during logout
+            pass
             
     return jsonify({"status": "success", "message": "Logged out successfully."})
 
@@ -368,61 +353,48 @@ def logout(current_user_address):
 @cross_origin()
 @jwt_required
 def register_asset(current_user_address):
-    """Register a new physical asset on-chain."""
-    # Handle Form Data instead of JSON
+
     id_ = request.form.get("id")
-    type_ = request.form.get("type", "Asset") # Now treating as 'Category'
+    type_ = request.form.get("type", "Asset")
     desc = request.form.get("description")
     
     if not id_ or not desc:
         return jsonify({"error": "Missing 'id' or 'description'"}), 400
 
-    # Handle File Upload (Proof)
     proof_hash = ""
     image_url = ""
     
     if 'proof' in request.files:
         file = request.files['proof']
         if file.filename != '':
-            # Calculate SHA256 Hash
             file_bytes = file.read()
             proof_hash = hashlib.sha256(file_bytes).hexdigest()
             
-            # Save File Locally
             filename = secure_filename(f"{id_}_{file.filename}")
             upload_dir = os.path.join(app.static_folder, 'uploads')
             if not os.path.exists(upload_dir):
                 os.makedirs(upload_dir)
             
             file_path = os.path.join(upload_dir, filename)
-            # Reset pointer to start to save it
             file.seek(0) 
             file.save(file_path)
             
-            # Use relative path for frontend
             image_url = f"/static/uploads/{filename}"
 
-    # Generate Asset ID (if not provided, though form provides it usually)
-    # The 'type' prompt asked for category, so let's use it as category.
-    # We'll use the id_ passed from frontend.
+    
+
     
     try:
-        # Check if ID exists
         try:
             exists = contract.functions.getAsset(id_).call()
             return jsonify({"error": "Asset ID already exists"}), 400
         except Exception as e:
-            # This exception means the asset doesn't exist, which is good.
-            # A more robust check would be to check the error message or specific error type.
-            # For now, we assume any error means it doesn't exist.
             pass 
 
-        # Register on Blockchain (V4)
-        # registerAsset(id, desc, category, proofHash, imageUrl, owner)
         tx_hash = contract.functions.registerAsset(
             id_, 
             desc, 
-            type_,      # Sending 'Type' as 'Category'
+            type_,
             proof_hash, 
             image_url, 
             current_user_address
@@ -441,22 +413,19 @@ def register_asset(current_user_address):
 @cross_origin()
 @jwt_required
 def list_assets(current_user_address):
-    """List assets owned by the user."""
+
     user_assets = []
     
-    # ITERATE ON-CHAIN ASSETS (Inefficient for Mainnet, OK for Prototype)
     try:
         count = contract.functions.getAssetCount().call()
         print(f"DEBUG: Found {count} total assets on-chain.")
         for i in range(count):
              aid = contract.functions.assetIds(i).call()
              details = contract.functions.getAsset(aid).call()
-             # details: (id, desc, status, owner, regAt)
              
              on_chain_owner = str(details[3])
              print(f"DEBUG: Checking Asset {aid} (Owner: {on_chain_owner}) vs User {current_user_address}")
 
-             # Case-insensitive comparison is safer
              if on_chain_owner.lower() == current_user_address.lower(): 
                  parts = details[1].split(" | ", 1)
                  atype = parts[0] if len(parts) > 1 else "Asset"
@@ -479,7 +448,7 @@ def list_assets(current_user_address):
 @app.route("/api/admin/stolen", methods=["GET"])
 @cross_origin()
 def admin_stolen_feed():
-    """Admin endpoint to list all stolen assets (No Auth for Demo Context)."""
+
     stolen_assets = []
     
     try:
@@ -487,7 +456,6 @@ def admin_stolen_feed():
         for i in range(count):
              aid = contract.functions.assetIds(i).call()
              details = contract.functions.getAsset(aid).call()
-             # details: (id, desc, status, owner, regAt)
              
              status = details[2]
              if status == "STOLEN":
@@ -513,10 +481,10 @@ def admin_stolen_feed():
 @cross_origin()
 @jwt_required
 def report_asset(current_user_address):
-    """Report an asset as stolen or recover it."""
+
     data = request.json or {}
     asset_id = data.get("asset_id")
-    status = data.get("status") # STOLEN or CLEAN
+    status = data.get("status")
     
     if not asset_id or status not in ["STOLEN", "CLEAN"]:
         return jsonify({"error": "Invalid request"}), 400
@@ -528,7 +496,6 @@ def report_asset(current_user_address):
         if asset_owner != current_user_address:
             return jsonify({"error": "Unauthorized"}), 403
             
-        # Send Tx
         tx_hash = contract.functions.setAssetStatus(asset_id, status).transact({'from': w3.eth.accounts[0]})
         w3.eth.wait_for_transaction_receipt(tx_hash)
         print(f"Asset {asset_id} status updated to {status} on-chain.")
@@ -543,7 +510,7 @@ def report_asset(current_user_address):
 @cross_origin()
 @jwt_required
 def transfer_asset(current_user_address):
-    """Transfer an asset to another user."""
+
     data = request.json or {}
     asset_id = data.get("asset_id")
     new_owner = data.get("new_owner")
@@ -563,11 +530,9 @@ def transfer_asset(current_user_address):
         details = contract.functions.getAsset(asset_id).call()
         current_owner = details[3]
         
-        # Case Insensitive Check
         if str(current_owner).lower() != current_user_address.lower():
             return jsonify({"error": "You do not own this asset"}), 403
             
-        # Send Transfer Tx (Gov Node pays gas)
         tx_hash = contract.functions.transferAsset(asset_id, new_owner).transact({'from': w3.eth.accounts[0]})
         w3.eth.wait_for_transaction_receipt(tx_hash)
         print(f"Asset {asset_id} transferred from {current_user_address} to {new_owner}")
@@ -581,7 +546,7 @@ def transfer_asset(current_user_address):
 @app.route("/api/verify-asset/<asset_id>", methods=["GET"])
 @cross_origin()
 def verify_asset(asset_id):
-    """Public endpoint to verify asset status (Anonymous)."""
+
     try:
         details = contract.functions.getAsset(asset_id).call()
         
@@ -589,10 +554,8 @@ def verify_asset(asset_id):
         atype = parts[0] if len(parts) > 1 else "Asset"
         adesc = parts[1] if len(parts) > 1 else details[1]
         
-        # --- FETCH HISTORY (LOGS) ---
         history = []
         try:
-            # Create a filter for AssetTransfer events for this specific ID
             event_filter = contract.events.AssetTransfer.create_filter(from_block=0, argument_filters={'id': asset_id})
             logs = event_filter.get_all_entries()
             
@@ -605,12 +568,10 @@ def verify_asset(asset_id):
                     "tx_hash": log['transactionHash'].hex()
                 })
                 
-            # Sort by timestamp descending (newest first)
             history.sort(key=lambda x: x['timestamp'], reverse=True)
             
         except Exception as e:
             print(f"Log Fetch Error: {e}")
-            # Non-critical, return empty history if fails
             
         return jsonify({
             "id": details[0],

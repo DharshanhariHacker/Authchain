@@ -9,17 +9,16 @@
     /* PREMIUM GOLD & BLACK COLOR PALETTE */
     :root {
       --bg1: #000000;
-      /* Pure Black */
+
       --bg2: #050505;
-      /* Off Black */
+
       --card: #0a0a0a;
-      /* Dark Card */
+
       --accent: #D4AF37;
-      /* Metallic Gold */
+
       --accent-2: #F6Eebc;
-      /* Pale Gold */
+
       --text: #e0e0e0;
-      /* Silver/White */
       --glass: rgba(212, 175, 55, 0.05);
       --glass-2: rgba(212, 175, 55, 0.1);
       --muted: #666;
@@ -37,13 +36,12 @@
       width: 100%;
       height: 100%;
       z-index: -2;
-      /* Ensure it's behind everything */
+
       background-image: url('https://i.imgur.com/eBf23tA.jpeg');
-      /* A subtle circuit board image */
+
       background-size: cover;
       background-position: center;
       filter: brightness(0.4) contrast(1.2);
-      /* Darken and enhance for a techy feel */
       opacity: 0.8;
       will-change: filter;
     }
@@ -57,7 +55,8 @@
       height: 100%;
       z-index: -1;
       overflow: hidden;
-      /* Static gradient overlay */
+      z-index: -1;
+      overflow: hidden;
       background: radial-gradient(circle at 50% 100%, rgba(0, 136, 255, 0.15) 0%, transparent 70%), var(--bg2);
     }
 
@@ -79,7 +78,6 @@
     #flash-overlay.active {
       opacity: 0.8;
       transition: opacity 0.2s ease-out 0.05s;
-      /* Slower fade out */
     }
 
 
@@ -98,7 +96,7 @@
       align-items: center;
       justify-content: center;
       padding: 32px;
-      /* Holographic text glow */
+
       text-shadow: 0 0 4px var(--accent-2), 0 0 1px var(--accent-2);
     }
 
@@ -123,7 +121,10 @@
       content: none;
     }
 
-    /* Background Orbs (Kept for subtle light) */
+    .scene::before {
+      content: none;
+    }
+
     .orb {
       position: absolute;
       border-radius: 50%;
@@ -196,7 +197,6 @@
       box-shadow: 0 0 15px rgba(0, 136, 255, 0.5), 0 0 8px rgba(51, 255, 255, 0.4);
       transform: rotate(-5deg);
       animation: logoPulse 1.5s infinite ease-in-out alternate, logoSpin 10s linear infinite;
-      /* Combined animation */
     }
 
     @keyframes logoPulse {
@@ -592,26 +592,24 @@
   <canvas id="particles"
     style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000 100%);"></canvas>
 
-  <!-- CLICK FLASH OVERLAY -->
   <div id="flash-overlay"></div>
 
   <div class="scene">
-    <!-- Keeping CSS orbs for light effect -->
+
     <div class="orb one" aria-hidden></div>
     <div class="orb two" aria-hidden></div>
 
     <header>
       <div class="logo" aria-hidden>
-        <!-- NEW LOGO: Holographic Circuit Core --><svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-          xmlns="http://www.w3.org/2000/svg">
-          <!-- Outer Ring -->
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+
           <circle cx="12" cy="12" r="10" stroke="#e0f7fa" stroke-width="1.5" opacity="0.4" />
-          <!-- Internal Electric Cross (Animated Spark) -->
+
           <g id="logo-spark">
             <path d="M12 4v16 M4 12h16 M17 7 L7 17 M7 7 L17 17" stroke="#33ffff" stroke-width="1.2"
               stroke-linecap="round" opacity="0.9" />
           </g>
-          <!-- Core Highlight -->
+
           <circle cx="12" cy="12" r="2" fill="#0077ff" stroke="#33ffff" stroke-width="0.8" />
         </svg>
       </div>
@@ -621,9 +619,8 @@
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
         <div class="chain" title="System Status Indicator">
-          <!-- Server rack icon --><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            style="color:var(--accent-2); opacity: 0.7;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-2); opacity: 0.7;">
             <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
             <path d="M8 6h8"></path>
             <path d="M8 10h8"></path>
@@ -666,7 +663,8 @@
               <span class="btn-loader loader"></span>
             </button>
 
-            <!-- ADMIN SHORTCUT -->
+
+
             <button class="btn ripple"
               style="background:transparent; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.5)"
               onclick="window.location.href='admin.html'">
@@ -692,7 +690,7 @@
       </div>
 
       <div class="card log" id="log" aria-live="polite">
-        <!-- dynamic logs will appear here -->
+
         <div class="line info show">[—] <strong class="log-label">SYSTEM:</strong> PROTOCOL INITIATED. STANDBY...</div>
       </div>
     </div>
@@ -736,11 +734,9 @@
         this.x += this.vx;
         this.y += this.vy;
 
-        // Bounce
-        if (this.x < 0 || this.x > cvs.width) this.vx *= -1;
-        if (this.y < 0 || this.y > cvs.height) this.vy *= -1;
 
-        // Mouse Interaction (Repel)
+
+
         const dx = this.x - mouse.x;
         const dy = this.y - mouse.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -806,8 +802,8 @@
     animate();
   </script>
   <script>
-    // ---------- AUTHCHAIN INTERACTION LOGIC ----------
-    let CONTRACT_ADDRESS = null; // Will be fetched from backend
+
+    let CONTRACT_ADDRESS = null;
     const CONTRACT_ABI = [
       { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "users", "outputs": [{ "internalType": "string", "name": "publicKey", "type": "string" }, { "internalType": "bool", "name": "isActive", "type": "bool" }], "stateMutability": "view", "type": "function", "constant": true },
       { "inputs": [{ "internalType": "string", "name": "_publicKey", "type": "string" }], "name": "registerUser", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
@@ -819,7 +815,9 @@
     let account = null;
     let authToken = null;
 
-    // Fetch config on load
+
+
+
     async function fetchConfig() {
       try {
         const res = await fetch(BACKEND_BASE + "/config");
@@ -845,21 +843,19 @@
     const statusContainer = document.getElementById('statusContainer');
     const flashOverlay = document.getElementById('flash-overlay');
 
-    // Spotlight elements (kept for background div reference)
+
+
     const threeBgEl = document.getElementById('three-bg');
 
 
-    function timestamp() { return new Date().toLocaleTimeString(); }
 
-    // New function to trigger the dramatic screen flash
-    function triggerFlash() {
-      flashOverlay.classList.add('active');
-      setTimeout(() => {
-        flashOverlay.classList.remove('active');
-      }, 300); // Flash for 300ms
-    }
 
-    // typewriter-like append (returns a promise that resolves when typing finished)
+
+
+
+
+
+
     function typeLog(text, opts = { prepend: true, delay: 12, type: 'info', label: 'LOG' }) {
       return new Promise((resolve) => {
         const wrapper = document.createElement('div');
@@ -876,7 +872,6 @@
         wrapper.innerHTML = fullText.slice(0, i);
 
         function step() {
-          // Clean cursor animation (using current accent color)
           wrapper.innerHTML = fullText.slice(0, i) + (i < fullText.length ? '<span style="color:var(--accent);font-weight:100;opacity: 0.8; animation: cleanCursor 0.5s infinite alternate;">█</span>' : '');
           if (i++ <= fullText.length) {
             setTimeout(step, opts.delay);
@@ -889,7 +884,6 @@
         step();
       });
     }
-    // Define clean cursor animation
     const style = document.createElement('style');
     style.textContent = `@keyframes cleanCursor {
       0% { opacity: 1; }
@@ -897,8 +891,12 @@
   }`;
     document.head.appendChild(style);
 
+    function triggerFlash() {
+      const overlay = document.getElementById('flash-overlay');
+      overlay.classList.add('active');
+      setTimeout(() => overlay.classList.remove('active'), 200);
+    }
 
-    // function to handle button loading state
     function setButtonLoading(btnId, isLoading, defaultText, loadingText = 'PROCESSING...') {
       const btn = document.getElementById(btnId);
       if (!btn) return;
@@ -913,13 +911,12 @@
         loaderSpan.style.display = 'inline-block';
         btn.classList.add('loading');
         btn.disabled = true;
-        triggerFlash(); // Flash on action start
+        triggerFlash();
       } else {
         textSpan.textContent = btn.getAttribute('data-default-text') || defaultText;
         loaderSpan.style.display = 'none';
         btn.classList.remove('loading');
 
-        // Re-enable based on connection status
         document.getElementById('connectBtn').disabled = false;
         if (account) {
           document.getElementById('registerBtn').disabled = false;
@@ -969,7 +966,6 @@
       }
     }
 
-    // tiny confetti (blue/cyan particles)
     function confettiBurst() {
       const count = 15;
       const colors = ['#0077ff', '#00ffff', '#e0f7fa'];
@@ -990,7 +986,10 @@
       }
     }
 
-    // ---------- MOUSE TRAIL LOGIC (Digital Wake) ----------
+
+
+
+
 
     let trailElements = [];
     const TRAIL_COUNT = 20;
@@ -1006,11 +1005,9 @@
     }
 
     document.addEventListener('mousemove', (e) => {
-      // 1. Get the next element in the queue
       const dot = trailElements[currentTrailIndex];
       currentTrailIndex = (currentTrailIndex + 1) % TRAIL_COUNT;
 
-      // 2. Set position instantly (disable transition)
       dot.style.transition = 'none';
       dot.style.left = `${e.clientX}px`;
       dot.style.top = `${e.clientY}px`;
@@ -1021,7 +1018,7 @@
       requestAnimationFrame(() => {
         dot.style.transition = 'opacity 0.6s ease-out, transform 0.8s ease-out';
         dot.style.opacity = '0';
-        // Give it a random drift and fade effect
+
         const driftX = Math.random() * 50 - 25;
         const driftY = Math.random() * 50 - 25;
         dot.style.transform = `translate(calc(-50% + ${driftX}px), calc(-50% + ${driftY}px)) scale(0.1)`;
@@ -1029,7 +1026,10 @@
     });
 
 
-    // ---------- MetaMask + Web3 interactions (functionality maintained) ----------
+
+
+
+
 
     function checkConfig() {
       if (!CONTRACT_ABI || CONTRACT_ABI.length === 0) { typeLog('CONTRACT_ABI MISSING', { type: 'error' }); return false }
@@ -1149,7 +1149,8 @@
 
       await typeLog('AUTHENTICATION GRANTED. SECURE TOKEN OBTAINED.', { type: 'success', label: 'SYSTEM' });
 
-      // Store token and redirect
+
+
       localStorage.setItem("auth_token", verifyJson.token);
       await typeLog('REDIRECTING TO ASSET DASHBOARD...', { type: 'success', label: 'SYSTEM' });
 
@@ -1200,7 +1201,8 @@
     document.getElementById('loginBtn').addEventListener('click', async (e) => { await login(); });
     document.getElementById('logoutBtn').addEventListener('click', async (e) => { await logout(); });
 
-    // auto-inform if accounts change
+
+
     if (window.ethereum) {
       ethereum.on('accountsChanged', (accs) => {
         if (accs.length) {
@@ -1219,7 +1221,8 @@
       });
     }
 
-    // Start initial status message and trail initialization
+
+
     window.onload = function () {
       initTrail();
       (async () => {
@@ -1236,9 +1239,8 @@
 
   </script>
 
-  <!-- web3 -->
   <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.10.0/dist/web3.min.js"></script>
-  <!-- Google Fonts for 'Share Tech Mono' (Cyberpunk feel) -->
+
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </body>
 
