@@ -28,15 +28,29 @@
             font-family: var(--font-main);
             background-color: var(--bg);
 
-            background-image:
-                radial-gradient(circle at 50% 0%, #1a1a1a 0%, transparent 60%),
-                linear-gradient(0deg, #050505 0%, #0a0a0a 100%);
+            background: linear-gradient(-45deg, #020202, #080808, #110d00, #020202);
+            background-size: 400% 400%;
+            animation: ambientPulse 15s ease infinite;
             color: var(--text);
             display: flex;
             flex-direction: column;
             align-items: center;
             margin: 0;
             min-height: 100vh;
+        }
+
+        @keyframes ambientPulse {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
 
@@ -108,6 +122,8 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(5px);
+            background: rgba(15, 15, 15, 0.6);
         }
 
 
@@ -138,6 +154,7 @@
             font-size: 14px;
             letter-spacing: 2px;
             font-weight: 600;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
         }
 
         .btn {
@@ -250,7 +267,9 @@
             justify-content: space-between;
             align-items: center;
             transition: all 0.2s;
-            animation: slideIn 0.3s ease-out;
+            opacity: 0;
+            /* Hidden initially for staggered animation */
+            animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
         .asset-item:hover {
@@ -324,8 +343,9 @@
 </head>
 
 <body>
-    <canvas id="particles"
-        style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000 100%);"></canvas>
+    <canvas id="constellation"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none;"></canvas>
+    <!-- Background cleared -->
 
     <header>
         <h1>ASSET DASHBOARD</h1>
@@ -471,9 +491,11 @@
             document.getElementById("listHeaderCount").textContent = assets.length;
 
             list.innerHTML = "";
-            assets.forEach(asset => {
+            assets.forEach((asset, index) => {
                 const div = document.createElement("div");
                 div.className = "asset-item";
+                // Staggered animation delay
+                div.style.animationDelay = `${index * 0.1}s`;
 
                 div.style.flexWrap = "wrap";
                 div.style.gap = "15px";
@@ -619,57 +641,7 @@
 
         loadAssets();
 
-        const cvs = document.getElementById('particles');
-        const ctx = cvs.getContext('2d');
-        let nodes = [];
-        const mouse = { x: -100, y: -100 };
-        function resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
-        window.addEventListener('resize', resize);
-        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-        class Node {
-            constructor() {
-                this.x = Math.random() * cvs.width; this.y = Math.random() * cvs.height;
-                this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 2 + 1;
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                if (this.x < 0 || this.x > cvs.width) this.vx *= -1;
-                if (this.y < 0 || this.y > cvs.height) this.vy *= -1;
-                const dx = this.x - mouse.x; const dy = this.y - mouse.y;
-                if (Math.sqrt(dx * dx + dy * dy) < 150) {
-                    const angle = Math.atan2(dy, dx);
-                    this.x += Math.cos(angle) * 2; this.y += Math.sin(angle) * 2;
-                }
-            }
-            draw() {
-                ctx.fillStyle = '#D4AF37'; ctx.globalAlpha = 0.5;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-            }
-        }
-        for (let i = 0; i < 80; i++) nodes.push(new Node());
-        function animate() {
-            ctx.clearRect(0, 0, cvs.width, cvs.height);
-            ctx.strokeStyle = '#D4AF37'; ctx.lineWidth = 0.5;
-            for (let i = 0; i < nodes.length; i++) {
-                nodes[i].update(); nodes[i].draw();
-                for (let j = i; j < nodes.length; j++) {
-                    const dx = nodes[i].x - nodes[j].x; const dy = nodes[i].y - nodes[j].y;
-                    const d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < 100) {
-                        ctx.globalAlpha = 1 - (d / 100); ctx.beginPath();
-                        ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke();
-                    }
-                }
-                const mdx = nodes[i].x - mouse.x; const mdy = nodes[i].y - mouse.y;
-                if (Math.sqrt(mdx * mdx + mdy * mdy) < 150) {
-                    ctx.globalAlpha = 1 - (Math.sqrt(mdx * mdx + mdy * mdy) / 150); ctx.beginPath();
-                    ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-        animate();
+
     </script>
 </body>
 

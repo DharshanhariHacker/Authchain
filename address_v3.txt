@@ -1,5 +1,0 @@
-Deploying from account: 0xd6a16347ab91F8fC59879d488d11787FDEEc6954
-Waiting for transaction to be mined...
-------------------------------
-Contract Deployed At: 0xe3079F94d6b34B0bC586bb2e01341C118E7C4CC6
-------------------------------

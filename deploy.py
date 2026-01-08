@@ -37,5 +37,29 @@ def deploy():
     print(f"Contract Deployed At: {tx_receipt.contractAddress}")
     print("-" * 30)
 
+    # --- AUTO-UPDATE .ENV ---
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    new_line = f"CONTRACT_ADDRESS={tx_receipt.contractAddress}\n"
+    
+    lines = []
+    if os.path.exists(env_path):
+        with open(env_path, "r") as f:
+            lines = f.readlines()
+            
+    updated = False
+    with open(env_path, "w") as f:
+        for line in lines:
+            if line.startswith("CONTRACT_ADDRESS="):
+                f.write(new_line)
+                updated = True
+            else:
+                f.write(line)
+        if not updated:
+            if lines and not lines[-1].endswith("\n"):
+                f.write("\n")
+            f.write(new_line)
+            
+    print(f"Updated .env with new CONTRACT_ADDRESS: {tx_receipt.contractAddress}")
+
 if __name__ == "__main__":
     deploy()

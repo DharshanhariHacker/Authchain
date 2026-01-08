@@ -821,6 +821,9 @@
     async function fetchConfig() {
       try {
         const res = await fetch(BACKEND_BASE + "/config");
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         const data = await res.json();
         CONTRACT_ADDRESS = data.contractAddress;
         console.log("Config loaded:", data);
@@ -830,7 +833,11 @@
         }
       } catch (e) {
         console.error("Failed to load config from backend:", e);
-        await typeLog("CRITICAL: FAILED TO LOAD PROTOCOL CONFIG. IS BACKEND RUNNING?", { type: 'error' });
+        if (document.getElementById('meta-contract')) {
+          document.getElementById('meta-contract').textContent = 'ERROR';
+          document.getElementById('meta-contract').style.color = '#ff3366';
+        }
+        await typeLog("CRITICAL: FAILED TO LOAD PROTOCOL CONFIG. IS BACKEND RUNNING? (" + e.message + ")", { type: 'error' });
       }
     }
 
@@ -855,6 +862,11 @@
 
 
 
+
+    function timestamp() {
+      const d = new Date();
+      return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0') + ':' + d.getSeconds().toString().padStart(2, '0');
+    }
 
     function typeLog(text, opts = { prepend: true, delay: 12, type: 'info', label: 'LOG' }) {
       return new Promise((resolve) => {
@@ -1032,25 +1044,38 @@
 
 
     function checkConfig() {
-      if (!CONTRACT_ABI || CONTRACT_ABI.length === 0) { typeLog('CONTRACT_ABI MISSING', { type: 'error' }); return false }
-      if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === '0x...') { typeLog('CONTRACT_ADDRESS NOT CONFIGURED', { type: 'error' }); return false }
-      return true;
+      let valid = true;
+      if (!CONTRACT_ABI || CONTRACT_ABI.length === 0) {
+        typeLog('CONFIGURATION ERROR: CONTRACT_ABI IS MISSING OR EMPTY.', { type: 'error' });
+        valid = false;
+      }
+      if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === '0x...' || CONTRACT_ADDRESS === 'null') {
+        typeLog('CONFIGURATION ERROR: CONTRACT_ADDRESS NOT SET. BACKEND MAY BE MISCONFIGURED.', { type: 'error' });
+
+        if (document.getElementById('meta-contract')) {
+          document.getElementById('meta-contract').textContent = 'MISSING';
+          document.getElementById('meta-contract').style.color = '#ff3366';
+        }
+        valid = false;
+      }
+      return valid;
     }
 
     async function connect() {
       const btnId = 'connectBtn';
-      setButtonLoading(btnId, true, 'CONNECT WALLET', 'ACCESSING DATAPORT...');
-
-      if (!window.ethereum) {
-        await typeLog('ERROR 404: METAMASK NOT DETECTED. INSTALL EXTENSION TO PROCEED.', { type: 'error', label: 'WEB3' });
-        setButtonLoading(btnId, false, 'CONNECT WALLET');
-        return;
-      }
-      if (!checkConfig()) {
-        setButtonLoading(btnId, false, 'CONNECT WALLET');
-        return;
-      }
       try {
+        setButtonLoading(btnId, true, 'CONNECT WALLET', 'ACCESSING DATAPORT...');
+
+        if (!window.ethereum) {
+          await typeLog('ERROR 404: METAMASK NOT DETECTED. INSTALL EXTENSION TO PROCEED.', { type: 'error', label: 'WEB3' });
+          setButtonLoading(btnId, false, 'CONNECT WALLET');
+          return;
+        }
+        if (!checkConfig()) {
+          setButtonLoading(btnId, false, 'CONNECT WALLET');
+          return;
+        }
+
         await typeLog('INITIATING WALLET AUTHENTICATION PROTOCOL...', { label: 'WALLET' });
         const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
         account = accounts[0];
@@ -1059,6 +1084,7 @@
         setStatus(true, account, 'CHAIN:' + parseInt(chainId, 16));
         await typeLog('STATUS 200: WALLET CONNECTION SECURE. IDENTITY: ' + account, { type: 'success', label: 'WALLET' });
       } catch (e) {
+        console.error("Connect error:", e);
         await typeLog('CONNECTION FAILURE: ' + (e.message || String(e)).toUpperCase(), { type: 'error', label: 'WALLET' });
       } finally {
         setButtonLoading(btnId, false, 'CONNECT WALLET');
